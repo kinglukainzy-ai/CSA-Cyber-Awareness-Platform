@@ -2,12 +2,13 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { api } from "@/lib/api";
-import { socket } from "@/lib/socket";
+import { useSocket } from "@/providers/SocketProvider";
 import { Card } from "@/components/ui/Card";
 import { Trophy, Medal, User, TrendingUp } from "lucide-react";
 import type { LeaderboardEntry } from "@/types";
 
 export function ScoreBoard({ sessionId }: { sessionId: string }) {
+  const { socket } = useSocket();
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
 
   const fetchScoreboard = useCallback(async () => {
@@ -26,12 +27,16 @@ export function ScoreBoard({ sessionId }: { sessionId: string }) {
       setEntries(payload.leaderboard);
     };
 
-    socket.on("leaderboard_update", handleUpdate);
+    if (socket) {
+      socket.on("leaderboard_update", handleUpdate);
+    }
 
     return () => {
-      socket.off("leaderboard_update", handleUpdate);
+      if (socket) {
+        socket.off("leaderboard_update", handleUpdate);
+      }
     };
-  }, [sessionId, fetchScoreboard]);
+  }, [sessionId, fetchScoreboard, socket]);
 
   return (
     <Card className="flex flex-col gap-8 p-8 border-none shadow-xl shadow-brand-700/5">

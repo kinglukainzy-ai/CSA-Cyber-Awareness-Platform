@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/Card";
 import { ShieldCheck, Trophy, Target, Users, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { api } from "@/lib/api";
-import { socket } from "@/lib/socket";
+import { useSocket } from "@/providers/SocketProvider";
 import { clearParticipantSession } from "@/lib/participant-store";
 import { Logo } from "@/components/shared/Logo";
 
@@ -23,6 +23,7 @@ interface ScoreData {
 }
 
 export function SessionEndScreen({ participantUuid, sessionId }: SessionEndScreenProps) {
+  const { socket } = useSocket();
   const [data, setData] = useState<ScoreData | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -41,18 +42,22 @@ export function SessionEndScreen({ participantUuid, sessionId }: SessionEndScree
     fetchScore();
     clearParticipantSession();
     
-    // Remove all listeners
-    socket.off("session_status");
-    socket.off("challenge_unlocked");
-    socket.off("leaderboard_update");
-    socket.off("poll_launched");
-    socket.off("poll_results");
-    socket.disconnect();
+    if (socket) {
+      // Remove all listeners
+      socket.off("session_status");
+      socket.off("challenge_unlocked");
+      socket.off("leaderboard_update");
+      socket.off("poll_launched");
+      socket.off("poll_results");
+      socket.disconnect();
+    }
 
     return () => {
-      socket.disconnect();
+      if (socket) {
+        socket.disconnect();
+      }
     };
-  }, [participantUuid, sessionId]);
+  }, [participantUuid, sessionId, socket]);
 
   if (loading) {
     return (

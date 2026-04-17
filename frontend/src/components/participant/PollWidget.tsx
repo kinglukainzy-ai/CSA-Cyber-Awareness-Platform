@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { api } from "@/lib/api";
-import { socket } from "@/lib/socket";
+import { useSocket } from "@/providers/SocketProvider";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { BarChart3, CheckCircle2, Loader2, Users, Trophy, XCircle } from "lucide-react";
@@ -31,6 +31,7 @@ interface PollWidgetProps {
 }
 
 export function PollWidget({ sessionId, participantUuid }: PollWidgetProps) {
+  const { socket } = useSocket();
   const [activePoll, setActivePoll] = useState<Poll | null>(null);
   const [results, setResults] = useState<PollResults | null>(null);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
@@ -39,42 +40,46 @@ export function PollWidget({ sessionId, participantUuid }: PollWidgetProps) {
   const [canDismiss, setCanDismiss] = useState(false);
 
   useEffect(() => {
-    socket.on("poll_launched", (poll: any) => {
-      // Map id to poll_id
-      const pollData: Poll = {
-        poll_id: poll.id || poll.poll_id,
-        question: poll.question,
-        options: poll.options,
-        type: poll.type,
-        correct_option: poll.correct_option
-      };
-      
-      setActivePoll(pollData);
-      setResults(null);
-      setSelectedOption(null);
-      setSubmitting(false);
-      setShowResults(false);
-      setCanDismiss(false);
-    });
-
-    socket.on("poll_results", (payload: { poll_id: string; results: PollResults; correct_option?: string }) => {
-      if (activePoll && payload.poll_id === activePoll.poll_id) {
-        setResults(payload.results);
-        setShowResults(true);
-        if (payload.correct_option) {
-          setActivePoll(prev => prev ? { ...prev, correct_option: payload.correct_option } : null);
-        }
+    if (socket) {
+      socket.on("poll_launched", (poll: any) => {
+        // Map id to poll_id
+        const pollData: Poll = {
+          poll_id: poll.id || poll.poll_id,
+          question: poll.question,
+          options: poll.options,
+          type: poll.type,
+          correct_option: poll.correct_option
+        };
         
-        // 3 second delay before showing dismiss button
-        setTimeout(() => setCanDismiss(true), 3000);
-      }
-    });
+        setActivePoll(pollData);
+        setResults(null);
+        setSelectedOption(null);
+        setSubmitting(false);
+        setShowResults(false);
+        setCanDismiss(false);
+      });
+
+      socket.on("poll_results", (payload: { poll_id: string; results: PollResults; correct_option?: string }) => {
+        if (activePoll && payload.poll_id === activePoll.poll_id) {
+          setResults(payload.results);
+          setShowResults(true);
+          if (payload.correct_option) {
+            setActivePoll(prev => prev ? { ...prev, correct_option: payload.correct_option } : null);
+          }
+          
+          // 3 second delay before showing dismiss button
+          setTimeout(() => setCanDismiss(true), 3000);
+        }
+      });
+    }
 
     return () => {
-      socket.off("poll_launched");
-      socket.off("poll_results");
+      if (socket) {
+        socket.off("poll_launched");
+        socket.off("poll_results");
+      }
     };
-  }, [activePoll]);
+  }, [activePoll, socket]);
 
   const handleVote = async (optionId: string) => {
     if (!activePoll || selectedOption || submitting) return;

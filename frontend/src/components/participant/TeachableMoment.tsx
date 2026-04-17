@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { socket } from "@/lib/socket";
+import { useSocket } from "@/providers/SocketProvider";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { 
@@ -21,17 +21,22 @@ interface RedFlag {
 }
 
 export function TeachableMoment() {
+  const { socket } = useSocket();
   const [showRedFlags, setShowRedFlags] = useState(false);
 
   useEffect(() => {
-    socket.on("reveal_red_flags", () => {
-      setShowRedFlags(true);
-    });
+    if (socket) {
+      socket.on("reveal_red_flags", () => {
+        setShowRedFlags(true);
+      });
+    }
 
     return () => {
-      socket.off("reveal_red_flags");
+      if (socket) {
+        socket.off("reveal_red_flags");
+      }
     };
-  }, []);
+  }, [socket]);
 
   return (
     <div className="flex flex-col gap-8 max-w-4xl mx-auto py-10 px-6 animate-in fade-in duration-700">

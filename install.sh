@@ -158,6 +158,10 @@ while true; do
         [ ${#MINIO_PASSWORD} -lt 16 ] && warn "MinIO password is under 16 characters."
     fi
 
+    # HIBP
+    echo -e "\n${BOLD}--- Group G: Security ---${NC}"
+    read -p "HIBP API Key (optional, for breach scans): " HIBP_API_KEY
+
     # Group F: Secrets
     JWT_SECRET=$(openssl rand -hex 32)
     SERIAL_SECRET=$(openssl rand -hex 32)
@@ -173,6 +177,7 @@ while true; do
     printf "%-25s : %s\n" "SMTP Host" "$SMTP_HOST"
     printf "%-25s : %s\n" "DB Password" "$(mask "$DB_PASSWORD")"
     printf "%-25s : %s\n" "MinIO User/Pass" "$MINIO_USER / $(mask "$MINIO_PASSWORD")"
+    printf "%-25s : %s\n" "HIBP API Key" "$(mask "$HIBP_API_KEY")"
 
     read -p "Does everything look correct? (yes/no): " CONFIRM_ALL
     if [[ "$CONFIRM_ALL" == "yes" ]]; then break; fi
@@ -271,7 +276,8 @@ fi
 log "[7/12] Patching infrastructure config..."
 # Safe tunnel removal: only if it exists
 if grep -q "tunnel:" docker-compose.yml; then
-    sed -i '/tunnel:/,/networks:/d' docker-compose.yml
+    # Delete from '  tunnel:' until the next double newline or end of file
+    sed -i '/  tunnel:/,/^$/d' docker-compose.yml
 fi
 
 # Parametrize MinIO
@@ -343,7 +349,7 @@ CELERY_RESULT_BACKEND=redis://redis:6379/2
 
 JWT_SECRET=$JWT_SECRET
 JWT_ALGORITHM=HS256
-JWT_EXPIRE_MINUTES=480
+JWT_EXPIRE_MINUTES=30
 SERIAL_SECRET=$SERIAL_SECRET
 
 SMTP_HOST=$SMTP_HOST
@@ -359,7 +365,8 @@ MINIO_ACCESS_KEY=$MINIO_USER
 MINIO_SECRET_KEY=$MINIO_PASSWORD
 MINIO_BUCKET=csa-reports
 
-HIBP_API_URL=https://api.pwnedpasswords.com/range
+HIBP_API_URL=https://haveibeenpwned.com/api/v3/breachedaccount
+HIBP_API_KEY=$HIBP_API_KEY
 
 # Admin seed
 SEED_ADMIN_EMAIL=$ADMIN_EMAIL

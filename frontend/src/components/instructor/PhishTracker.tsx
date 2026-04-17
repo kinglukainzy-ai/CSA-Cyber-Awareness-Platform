@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { api } from "@/lib/api";
-import { socket } from "@/lib/socket";
+import { useSocket } from "@/providers/SocketProvider";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { 
@@ -39,6 +39,7 @@ interface PhishStats {
 }
 
 export function PhishTracker({ sessionId }: { sessionId: string }) {
+  const { socket } = useSocket();
   const [stats, setStats] = useState<PhishStats>({
     sent: 0,
     opened: 0,
@@ -73,18 +74,22 @@ export function PhishTracker({ sessionId }: { sessionId: string }) {
 
     fetchData();
 
-    socket.on("phish_event", (event: PhishEvent) => {
-      setTimeline(prev => [event, ...prev].slice(0, 50));
-      setStats(prev => ({
-        ...prev,
-        [event.event_type]: (prev[event.event_type as keyof PhishStats] || 0) + 1
-      }));
-    });
+    if (socket) {
+      socket.on("phish_event", (event: PhishEvent) => {
+        setTimeline(prev => [event, ...prev].slice(0, 50));
+        setStats(prev => ({
+          ...prev,
+          [event.event_type]: (prev[event.event_type as keyof PhishStats] || 0) + 1
+        }));
+      });
+    }
 
     return () => {
-      socket.off("phish_event");
+      if (socket) {
+        socket.off("phish_event");
+      }
     };
-  }, [sessionId]);
+  }, [sessionId, socket]);
 
   const handleLaunch = async () => {
     if (!selectedTemplate) return;

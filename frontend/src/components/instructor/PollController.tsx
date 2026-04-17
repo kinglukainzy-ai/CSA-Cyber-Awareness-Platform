@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { api } from "@/lib/api";
-import { socket } from "@/lib/socket";
+import { useSocket } from "@/providers/SocketProvider";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { 
@@ -40,6 +40,7 @@ interface PollControllerProps {
 }
 
 export function PollController({ sessionId, totalParticipants }: PollControllerProps) {
+  const { socket } = useSocket();
   const [polls, setPolls] = useState<Poll[]>([]);
   const [expandedPollId, setExpandedPollId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -58,17 +59,21 @@ export function PollController({ sessionId, totalParticipants }: PollControllerP
   useEffect(() => {
     fetchPolls();
 
-    // Listen for live results updates
-    socket.on("poll_results", (payload: { poll_id: string; results: { [key: string]: number } }) => {
-      setPolls(prev => prev.map(p => 
-        p.id === payload.poll_id ? { ...p, results: payload.results } : p
-      ));
-    });
+    if (socket) {
+      // Listen for live results updates
+      socket.on("poll_results", (payload: { poll_id: string; results: { [key: string]: number } }) => {
+        setPolls(prev => prev.map(p => 
+          p.id === payload.poll_id ? { ...p, results: payload.results } : p
+        ));
+      });
+    }
 
     return () => {
-      socket.off("poll_results");
+      if (socket) {
+        socket.off("poll_results");
+      }
     };
-  }, [sessionId]);
+  }, [sessionId, socket]);
 
   const handleLaunch = async (pollId: string) => {
     try {

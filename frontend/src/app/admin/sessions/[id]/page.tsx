@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { api } from "@/lib/api";
-import { socket } from "@/lib/socket";
+import { useSocket } from "@/providers/SocketProvider";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -69,6 +69,7 @@ interface ParticipantEntry {
 }
 
 export default function SessionDashboard() {
+  const { socket } = useSocket();
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const [session, setSession] = useState<SessionDetail | null>(null);
@@ -95,34 +96,38 @@ export default function SessionDashboard() {
   useEffect(() => {
     fetchData();
 
-    socket.emit("join_room", { session_id: id, role: "instructor" });
+    if (socket) {
+      socket.emit("join_room", { session_id: id, role: "instructor" });
 
-    socket.on("participant_joined", (payload) => {
-      fetchData(); // Simplest way to refresh lists
-      setActivity(prev => [{ type: 'join', name: payload.name, time: new Date() }, ...prev].slice(0, 100));
-    });
+      socket.on("participant_joined", (payload) => {
+        fetchData(); // Simplest way to refresh lists
+        setActivity(prev => [{ type: 'join', name: payload.name, time: new Date() }, ...prev].slice(0, 100));
+      });
 
-    socket.on("challenge_unlocked", (payload) => {
-      setChallenges(prev => prev.map(c => c.id === payload.challenge_id ? { ...c, unlocked_at: new Date().toISOString() } : c));
-      setActivity(prev => [{ type: 'unlock', id: payload.challenge_id, time: new Date() }, ...prev].slice(0, 100));
-    });
+      socket.on("challenge_unlocked", (payload) => {
+        setChallenges(prev => prev.map(c => c.id === payload.challenge_id ? { ...c, unlocked_at: new Date().toISOString() } : c));
+        setActivity(prev => [{ type: 'unlock', id: payload.challenge_id, time: new Date() }, ...prev].slice(0, 100));
+      });
 
-    socket.on("phish_event", (payload) => {
-      setActivity(prev => [{ type: 'phish', ...payload, time: new Date() }, ...prev].slice(0, 100));
-    });
+      socket.on("phish_event", (payload) => {
+        setActivity(prev => [{ type: 'phish', ...payload, time: new Date() }, ...prev].slice(0, 100));
+      });
 
-    socket.on("leaderboard_update", (payload) => {
-      // Leaderboard updates ScoreBoard component internally, but we might want to refresh participants list
-      fetchData();
-    });
+      socket.on("leaderboard_update", (payload) => {
+        // Leaderboard updates ScoreBoard component internally, but we might want to refresh participants list
+        fetchData();
+      });
+    }
 
     return () => {
-      socket.off("participant_joined");
-      socket.off("challenge_unlocked");
-      socket.off("phish_event");
-      socket.off("leaderboard_update");
+      if (socket) {
+        socket.off("participant_joined");
+        socket.off("challenge_unlocked");
+        socket.off("phish_event");
+        socket.off("leaderboard_update");
+      }
     };
-  }, [id, fetchData]);
+  }, [id, fetchData, socket]);
 
   useEffect(() => {
     if (session?.status !== "live" || !session?.started_at) return;
