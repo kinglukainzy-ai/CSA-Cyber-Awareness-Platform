@@ -4,6 +4,18 @@ A comprehensive, live-session cybersecurity training platform built for Ghana's 
 
 ---
 
+## Prerequisites
+
+Before running the platform, you must have **Docker** and **Docker Compose** installed. If you are on a fresh Linux server, you can use our built-in helper script:
+
+```bash
+chmod +x scripts/install-docker.sh
+./scripts/install-docker.sh
+```
+*Supported: Ubuntu, Debian, Fedora, CentOS, RHEL.*
+
+---
+
 ## Quick Start (Local Setup)
 
 The easiest way to launch the platform is using the automated install script. This will configure environment variables, build the Docker stack, and seed the database.

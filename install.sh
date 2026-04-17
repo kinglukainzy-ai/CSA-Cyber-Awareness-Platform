@@ -16,21 +16,36 @@ echo -e "${BLUE}=== CSA Platform Installation & Setup ===${NC}\n"
 
 # 1. Check for Dependencies
 echo -e "${YELLOW}[1/4] Checking dependencies...${NC}"
-if ! [ -x "$(command -v docker)" ]; then
-  echo 'Error: docker is not installed.' >&2
+HAS_DOCKER=false
+if [ -x "$(command -v docker)" ]; then
+    HAS_DOCKER=true
+    DOCKER_BIN="docker"
+elif [ -x "$(command -v podman)" ]; then
+    echo -e "${BLUE}ℹ Podman detected. Using it as a Docker alternative.${NC}"
+    HAS_DOCKER=true
+    DOCKER_BIN="podman"
+    # Create an alias-like function for the script session
+    docker() { podman "$@"; }
+fi
+
+if [ "$HAS_DOCKER" = false ]; then
+  echo -e "${RED}Error: Docker (or Podman) is not installed.${NC}"
+  echo -e "Please run the installation helper first:"
+  echo -e "${BLUE}  chmod +x scripts/install-docker.sh && ./scripts/install-docker.sh${NC}"
   exit 1
 fi
 
+# Check for Docker Compose
 if ! [ -x "$(command -v docker-compose)" ]; then
-  if ! docker compose version >/dev/null 2>&1; then
-    echo 'Error: docker-compose is not installed.' >&2
+  if ! $DOCKER_BIN compose version >/dev/null 2>&1; then
+    echo -e "${RED}Error: docker-compose is not installed.${NC}"
     exit 1
   fi
-  DOCKER_COMPOSE="docker compose"
+  DOCKER_COMPOSE="$DOCKER_BIN compose"
 else
   DOCKER_COMPOSE="docker-compose"
 fi
-echo -e "${GREEN}✓ Docker and Docker Compose are available.${NC}\n"
+echo -e "${GREEN}✓ Container engine ($DOCKER_BIN) and Compose are available.${NC}\n"
 
 # 2. Configure Environment
 echo -e "${YELLOW}[2/4] Configuring environment variables...${NC}"
