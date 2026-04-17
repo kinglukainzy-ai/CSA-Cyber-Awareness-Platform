@@ -7,6 +7,7 @@ from app.models.challenge import Challenge, ChallengeHint
 from app.models.phishing import PhishTemplate
 from app.models.organisation import Organisation
 from app.models.admin import Admin
+from app.config import settings
 from app.routers.deps import hash_password
 
 PHISHING_TEMPLATES = [
@@ -127,11 +128,11 @@ async def seed_data():
             await db.refresh(org)
 
         # 2. Create Default Admin
-        admin = await db.scalar(select(Admin).where(Admin.email == "admin@csa.gov.gh"))
+        admin = await db.scalar(select(Admin).where(Admin.email == settings.seed_admin_email))
         if not admin:
             admin = Admin(
-                email="admin@csa.gov.gh",
-                password=hash_password("CSA-Training-2024"),
+                email=settings.seed_admin_email,
+                password=hash_password(settings.seed_admin_password),
                 full_name="CSA Site Administrator",
                 role="superadmin"
             )

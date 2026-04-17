@@ -18,3 +18,10 @@ providers:
   file:
     directory: /etc/traefik/dynamic
     watch: true
+
+certificatesResolvers:
+  le:
+    acme:
+      email: admin@csa.gov.gh
+      storage: /etc/traefik/acme.json
+      tlsChallenge: {}

@@ -6,10 +6,16 @@ export const metadata = {
   description: "Cybersecurity awareness for every Ghanaian"
 };
 
+import { SocketProvider } from "@/providers/SocketProvider";
+
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
-      <body className="min-h-screen font-sans">{children}</body>
+      <body className="min-h-screen font-sans">
+        <SocketProvider>
+          {children}
+        </SocketProvider>
+      </body>
     </html>
   );
 }

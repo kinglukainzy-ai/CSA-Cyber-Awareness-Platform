@@ -26,7 +26,7 @@ async def login(payload: LoginRequest, response: Response, db: AsyncSession = De
     if not admin or not verify_password(payload.password, admin.password):
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
-    access = create_token(str(admin.id), timedelta(minutes=480))
+    access = create_token(str(admin.id), timedelta(minutes=settings.jwt_expire_minutes))
     refresh = create_token(str(admin.id), timedelta(days=7))
     
     response.set_cookie("access_token", access, httponly=True, samesite="lax")
@@ -45,7 +45,7 @@ async def refresh(response: Response, refresh_token: str | None = Cookie(default
     except Exception:
         raise HTTPException(status_code=401, detail="Invalid refresh token")
     
-    access = create_token(admin_id, timedelta(minutes=480))
+    access = create_token(admin_id, timedelta(minutes=settings.jwt_expire_minutes))
     refresh = create_token(admin_id, timedelta(days=7))
     
     response.set_cookie("access_token", access, httponly=True, samesite="lax")

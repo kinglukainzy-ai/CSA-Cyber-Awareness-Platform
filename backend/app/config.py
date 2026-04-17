@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     redis_url: str
     jwt_secret: str
     jwt_algorithm: str = "HS256"
-    jwt_expire_minutes: int = 480
+    jwt_expire_minutes: int = 30
     serial_secret: str
     smtp_host: str
     smtp_port: int
@@ -19,7 +19,8 @@ class Settings(BaseSettings):
     minio_access_key: str
     minio_secret_key: str
     minio_bucket: str
-    hibp_api_url: str
+    hibp_api_url: str = "https://haveibeenpwned.com/api/v3/breachedaccount"
+    hibp_api_key: str
     frontend_url: str
     api_url: str
     tracking_base_url: str

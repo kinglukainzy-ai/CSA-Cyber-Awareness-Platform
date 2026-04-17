@@ -4,41 +4,45 @@ A comprehensive, live-session cybersecurity training platform built for Ghana's 
 
 ---
 
+---
+
 ## Prerequisites
 
-Before running the platform, you must have **Docker** and **Docker Compose** installed. If you are on a fresh Linux server, you can use our built-in helper script:
-
-```bash
-chmod +x scripts/install-docker.sh
-./scripts/install-docker.sh
-```
-*Supported: Ubuntu, Debian, Fedora, CentOS, RHEL.*
+Before running the platform, ensure you have:
+- **Docker** and **Docker Compose V2** installed.
+- **Port 80/443** open on your server firewall.
+- **OpenSSL** (for secret generation).
+- **Domain Name** (Optional, DuckDNS is supported natively).
 
 ---
 
-## Quick Start (Local Setup)
+## Deployment (Linux)
 
-The easiest way to launch the platform is using the automated install script. This will configure environment variables, build the Docker stack, and seed the database.
+Our interactive setup tool handles dependency checks, TLS certificate provisioning (Certbot), and full stack orchestration.
 
 ```bash
 chmod +x install.sh
-./install.sh
+sudo ./install.sh
 ```
 
-Once completed, access the platform at:
-- **Frontend**: [http://localhost](http://localhost)
-- **API Health**: [http://localhost/health](http://localhost/health)
-- **MinIO Console**: [http://localhost:9001](http://localhost:9001)
+## Deployment (Windows)
+
+We provide a native PowerShell orchestrator that integrates with Windows Task Scheduler for certificate auto-renewal.
+
+```powershell
+Set-ExecutionPolicy RemoteSigned -Scope Process
+.\install.ps1
+```
 
 ---
 
 ## Technology Stack
 
 - **Frontend**: Next.js 14, TypeScript, Tailwind CSS, Framer Motion.
-- **Backend**: FastAPI (Python 3.12), SQLAlchemy 2.0, Pydantic v2.
-- **Real-time**: Socket.io for live telemetry and instructor controls.
-- **Infrastructure**: Traefik (Edge Proxy), Docker Compose, Redis (State/Broker), PostgreSQL.
-- **Reporting**: WeasyPrint for automated PDF generation and MinIO for storage.
+- **Backend**: FastAPI (Python 3.12), SQLAlchemy 2.0.
+- **Real-time**: Socket.io (Hardened with JWT handshake and admin-only event blocking).
+- **Infrastructure**: Traefik (Edge Proxy), Certbot (TLS), Docker Compose, Redis, PostgreSQL.
+- **Reporting**: WeasyPrint (PDF Gen) and MinIO (S3-compatible storage).
 
 ---
 
@@ -49,6 +53,27 @@ Once completed, access the platform at:
 - `/traefik`: Proxy configuration for routing and TLS (in production).
 - `install.sh`: Automation script for one-click setup.
 - `docker-compose.yml`: Full stack orchestration.
+
+---
+
+## Maintenance & Monitoring
+
+The deployment scripts automatically configure automated renewals, but you can manage them manually using these helpers:
+
+- **Linux**:
+  - `/renew-cert.sh`: Force certificate renewal.
+  - `/check-cert.sh`: Verify certificate status and expiry.
+- **Windows**:
+  - `.\renew-cert.ps1`: Manual renewal (stops/starts Traefik).
+  - `.\check-cert.ps1`: Status dashboard.
+
+## Security Hardening
+
+This platform implements several production-grade security measures:
+- **Socket.io Authentication**: Mandatory JWT handshake; unauthorized connections are rejected before connecting.
+- **Role-Based Handlers**: Sensitive instructor actions (ending sessions, launching polls) are blocked at the socket level if the user lacks admin claims.
+- **Ephemeral Secrets**: Installers auto-generate unique `JWT_SECRET` and `SERIAL_SECRET` for every deployment.
+- **Token Security**: Default JWT access tokens expire after 30 minutes.
 
 ---
 

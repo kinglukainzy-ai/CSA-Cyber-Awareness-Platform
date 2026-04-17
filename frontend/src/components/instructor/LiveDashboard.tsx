@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { api } from "@/lib/api";
-import { socket } from "@/lib/socket";
+import { useSocket } from "@/providers/SocketProvider";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import {
@@ -34,6 +34,8 @@ export function LiveDashboard({ sessionId }: { sessionId: string }) {
   const [startedAt, setStartedAt] = useState<Date | null>(null);
   const [loading, setLoading] = useState(true);
   const [unlocking, setUnlocking] = useState<string | null>(null);
+  const [adminId, setAdminId] = useState<string | null>(null);
+  const { socket } = useSocket();
 
   const fetchData = useCallback(async () => {
     try {
@@ -77,16 +79,32 @@ export function LiveDashboard({ sessionId }: { sessionId: string }) {
   useEffect(() => {
     fetchData();
 
-    socket.on("participant_joined", (payload: { total_participants: number }) => {
-      setParticipantsCount(payload.total_participants);
-    });
+    // Get current admin for metrics/actions
+    api<any>("/auth/me").then(me => setAdminId(me.id)).catch(() => {});
+
+    if (socket) {
+      socket.on("participant_joined", (payload: { total_participants: number }) => {
+        setParticipantsCount(payload.total_participants);
+      });
+    }
 
     return () => {
-      socket.off("participant_joined");
+      if (socket) {
+        socket.off("participant_joined");
+      }
     };
-  }, [sessionId, fetchData]);
+  }, [sessionId, fetchData, socket]);
 
   const updateStatus = async (newStatus: string) => {
+    if (newStatus === "ended") {
+      // FAULT 8: Consolidate ending session to socket path only
+      if (socket) {
+        socket.emit("end_session", { session_id: sessionId, admin_id: adminId });
+        setStatus("ended");
+      }
+      return;
+    }
+
     try {
       await api(`/sessions/${sessionId}/status`, {
         method: "PUT",

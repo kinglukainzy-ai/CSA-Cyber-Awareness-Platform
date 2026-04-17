@@ -7,7 +7,7 @@ import { PhishTracker } from "@/components/instructor/PhishTracker";
 import { PollController } from "@/components/instructor/PollController";
 import { ScoreBoard } from "@/components/instructor/ScoreBoard";
 import { Card } from "@/components/ui/Card";
-import { socket } from "@/lib/socket";
+import { useSocket } from "@/providers/SocketProvider";
 import { 
   Monitor, 
   Settings, 
@@ -19,20 +19,23 @@ import { Button } from "@/components/ui/Button";
 
 export default function SessionDetailPage() {
   const params = useParams<{ id: string }>();
+  const { socket, connect, disconnect } = useSocket();
   const sessionId = params.id;
 
   useEffect(() => {
-    if (!sessionId) {
+    if (!sessionId || !socket) {
       return;
     }
 
-    socket.connect();
+    // Connect manually when page mounts
+    connect();
     socket.emit("join_session", { session_id: sessionId });
 
     return () => {
-      socket.disconnect();
+      // Disconnect when page unmounts
+      disconnect();
     };
-  }, [sessionId]);
+  }, [sessionId, socket, connect, disconnect]);
 
   return (
     <div className="flex flex-col gap-10">

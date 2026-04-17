@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
-import { socket } from "@/lib/socket";
+import { useSocket } from "@/providers/SocketProvider";
 import { useParticipantStore } from "@/lib/participant-store";
 import { Logo } from "@/components/shared/Logo";
 import { Card } from "@/components/ui/Card";
@@ -36,6 +36,7 @@ export default function SessionPage() {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [sessionStatus, setSessionStatus] = useState<string>("ready");
   const [loading, setLoading] = useState(true);
+  const { socket, connect, disconnect } = useSocket();
 
   const fetchData = async () => {
     if (!participant.sessionId) return;
@@ -61,28 +62,32 @@ export default function SessionPage() {
     
     fetchData();
 
-    socket.connect();
-    socket.emit("join_session", { session_id: participant.sessionId });
+    if (socket) {
+      connect();
+      socket.emit("join_session", { session_id: participant.sessionId });
 
-    socket.on("session_status", (payload: { status: string }) => {
-      setSessionStatus(payload.status);
-    });
+      socket.on("session_status", (payload: { status: string }) => {
+        setSessionStatus(payload.status);
+      });
 
-    socket.on("challenge_unlocked", (payload: { challenge_id: string }) => {
-      setChallenges(prev => prev.map(c => c.id === payload.challenge_id ? { ...c, is_locked: false } : c));
-    });
+      socket.on("challenge_unlocked", (payload: { challenge_id: string }) => {
+        setChallenges(prev => prev.map(c => c.id === payload.challenge_id ? { ...c, is_locked: false } : c));
+      });
 
-    socket.on("leaderboard_update", (payload: { leaderboard: LeaderboardEntry[] }) => {
-      setLeaderboard(payload.leaderboard);
-    });
+      socket.on("leaderboard_update", (payload: { leaderboard: LeaderboardEntry[] }) => {
+        setLeaderboard(payload.leaderboard);
+      });
+    }
 
     return () => {
-      socket.off("session_status");
-      socket.off("challenge_unlocked");
-      socket.off("leaderboard_update");
-      socket.disconnect();
+      if (socket) {
+        socket.off("session_status");
+        socket.off("challenge_unlocked");
+        socket.off("leaderboard_update");
+        disconnect();
+      }
     };
-  }, [participant.sessionId]);
+  }, [participant.sessionId, socket, connect, disconnect]);
 
   const handleLogout = () => {
     participant.clear();

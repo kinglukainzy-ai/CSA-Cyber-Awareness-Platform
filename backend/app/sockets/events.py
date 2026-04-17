@@ -1,9 +1,11 @@
 from datetime import datetime, timezone
 import socketio
 from sqlalchemy import select
+from app.config import settings
+from jose import jwt
 
 # Initialize Socket.io AsyncServer
-sio = socketio.AsyncServer(async_mode="asgi", cors_allowed_origins="*")
+sio = socketio.AsyncServer(async_mode="asgi", cors_allowed_origins=settings.frontend_url)
 
 
 # Helper to get session room name
@@ -13,7 +15,35 @@ def get_session_room(session_id: str) -> str:
 
 @sio.event
 async def connect(sid, environ, auth):
+    """
+    Authenticate connection using JWT from the 'auth' object.
+    Required for admins, optional for participants.
+    """
+    if auth and "token" in auth:
+        try:
+            payload = jwt.decode(
+                auth["token"], 
+                settings.jwt_secret, 
+                algorithms=[settings.jwt_algorithm]
+            )
+            # Store identity on session. Participants won't have this, so they connect as guests.
+            await sio.save_session(sid, {
+                "user_id": payload.get("sub"),
+                "role": "admin"
+            })
+            return True
+        except Exception as e:
+            print(f"[socket:connect] Auth failed: {e}")
+            return False
+    
+    # Allow participants to connect without JWT (they identify by session room)
     return True
+
+
+async def is_admin(sid) -> bool:
+    """Helper to check if the current SID belongs to an authenticated admin."""
+    session = await sio.get_session(sid)
+    return session and session.get("role") == "admin"
 
 
 @sio.event
@@ -35,6 +65,10 @@ async def unlock_challenge(sid, data):
     order_num = data.get("order_num", 0)
 
     if not session_id or not challenge_id:
+        return
+
+    if not await is_admin(sid):
+        print(f"[socket:unlock_challenge] Unauthorized attempt by {sid}")
         return
 
     # Lazy import to avoid circular deps
@@ -70,6 +104,10 @@ async def launch_poll(sid, data):
     if not session_id or not poll_id:
         return
 
+    if not await is_admin(sid):
+        print(f"[socket:launch_poll] Unauthorized attempt by {sid}")
+        return
+
     try:
         from app.database import AsyncSessionLocal
         from app.models.poll import Poll
@@ -97,6 +135,10 @@ async def end_session(sid, data):
     admin_id = data.get("admin_id")
 
     if not session_id:
+        return
+
+    if not await is_admin(sid):
+        print(f"[socket:end_session] Unauthorized attempt by {sid}")
         return
 
     try:

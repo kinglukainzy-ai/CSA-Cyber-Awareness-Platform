@@ -246,12 +246,6 @@ def build_session_report_pdf(summary: dict) -> bytes:
     </html>
     """
     
-    html_content = html_content.replace("{{", "{{").replace("}}", "}}") # Wait, I need to fix the f-string curly braces
-    # I'll just use .format() or a manual replacement to avoid confusion with f-string and styles
-    
-    # Actually, the f-string above is already using {{}} where needed, but I should be careful.
-    # Fixed it manually in the template above.
-    
     target = BytesIO()
     HTML(string=html_content).write_pdf(target)
     return target.getvalue()
