@@ -1,10 +1,10 @@
-# 🛡️ CSA Cyber Awareness Platform
+# CSA Cyber Awareness Platform
 
 A comprehensive, live-session cybersecurity training platform built for Ghana's Cyber Security Authority (CSA). This platform enables instructors to run real-time phishing simulations, CTF challenges, live polls, and automated impact reporting.
 
 ---
 
-## 🚀 Quick Start (Local Setup)
+## Quick Start (Local Setup)
 
 The easiest way to launch the platform is using the automated install script. This will configure environment variables, build the Docker stack, and seed the database.
 
@@ -20,7 +20,7 @@ Once completed, access the platform at:
 
 ---
 
-## 🛠️ Technology Stack
+## Technology Stack
 
 - **Frontend**: Next.js 14, TypeScript, Tailwind CSS, Framer Motion.
 - **Backend**: FastAPI (Python 3.12), SQLAlchemy 2.0, Pydantic v2.
@@ -30,7 +30,7 @@ Once completed, access the platform at:
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 
 - `/frontend`: Next.js application for Admin and Participant dashboards.
 - `/backend`: FastAPI service handling business logic, websockets, and background tasks.
@@ -40,7 +40,7 @@ Once completed, access the platform at:
 
 ---
 
-## 📑 Core Features
+## Core Features
 
 - **Real-time Command Center**: Live telemetry feed from participants and manual challenge progression.
 - **Phishing Engine**: Sandboxed template preview and real-time click/open tracking.
@@ -50,7 +50,7 @@ Once completed, access the platform at:
 
 ---
 
-## 🗃️ Data Persistence
+## Data Persistence
 
 All data is persisted via named Docker volumes:
 - `postgres_data`: Stores all mission data, participant telemetry, and templates.
@@ -59,7 +59,7 @@ All data is persisted via named Docker volumes:
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 1. Create a `.env` file from `.env.example`.
 2. Ensure you have Docker and Docker Compose installed.
@@ -68,6 +68,6 @@ All data is persisted via named Docker volumes:
 
 ---
 
-## ⚖️ License
+## License
 
 Proprietary - Developed for the Cyber Security Authority, Ghana.

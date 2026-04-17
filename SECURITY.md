@@ -16,9 +16,10 @@ The Cyber Security Authority (CSA) Ghana takes the security of its infrastructur
 **Please do not report security vulnerabilities through public GitHub issues.**
 
 Instead, please report them via email to:
-**security-reports@csa.gov.gh**
+**lquansah.intern@csa.gov.gh**
 
 Please include the following in your report:
+
 - Type of issue (e.g., SQL injection, XSS, etc.)
 - The location of the issue (URL, endpoint, or specific file)
 - A detailed description of the issue
