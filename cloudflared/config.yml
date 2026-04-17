@@ -1,0 +1,11 @@
+tunnel: ${CLOUDFLARE_TUNNEL_ID}
+credentials-file: /etc/cloudflared/credentials.json
+
+ingress:
+  - hostname: ${DOMAIN}
+    service: http://traefik:80
+  - hostname: api.${DOMAIN}
+    service: http://traefik:80
+  - hostname: track.${DOMAIN}
+    service: http://traefik:80
+  - service: http_status:404

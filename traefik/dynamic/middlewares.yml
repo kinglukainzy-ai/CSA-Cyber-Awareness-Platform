@@ -1,0 +1,18 @@
+http:
+  middlewares:
+    csa-rate-limit:
+      rateLimit:
+        average: 100
+        burst: 50
+    
+    csa-security-headers:
+      headers:
+        frameDeny: true
+        sslRedirect: true
+        browserXssFilter: true
+        contentTypeNosniff: true
+        forceSTSHeader: true
+        stsSeconds: 31536000
+        stsPreload: true
+        stsIncludeSubdomains: true
+        referrerPolicy: "strict-origin-when-cross-origin"

@@ -1,0 +1,7 @@
+tls:
+  certificates:
+    # Traefik will use the Cloudflare edge certificate provided via the tunnel,
+    # but we can configure internal self-signed certs here if needed for end-to-end TLS.
+    # For now, we'll assume the tunnel handles edge SSL.
+    - certFile: /etc/ssl/certs/selfsigned.crt
+      keyFile: /etc/ssl/private/selfsigned.key
