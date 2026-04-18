@@ -53,7 +53,7 @@ export const useParticipantStore = create<ParticipantState>((set) => {
     setParticipant: (payload) => {
       set((state) => {
         const next = { ...state, ...payload };
-        // We don't save to localStorage here to keep resolveParticipant as the source of truth for the complex object
+        // resolveParticipant is the source of truth
         return next;
       });
     },

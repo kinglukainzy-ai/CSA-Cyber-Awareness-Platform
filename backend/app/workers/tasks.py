@@ -37,7 +37,6 @@ async def _send_email_async(to_email: str, subject: str, body_html: str):
 
 @celery.task(time_limit=600, soft_time_limit=540)
 def generate_report_task(session_id: str, admin_id: str) -> dict:
-    """Generate PDF report in a fresh event loop."""
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     try:
@@ -172,7 +171,6 @@ async def _generate_report(session_id: str, admin_id: str):
 
 @celery.task(bind=True, max_retries=3)
 def send_phish_email(self, to_email: str, subject: str, html_body: str):
-    """Send a single phishing simulation email via SMTP service."""
     try:
         from app.services.email_service import send_email
         import asyncio

@@ -62,7 +62,6 @@ async def unlock_hint(
     if not hint:
         raise HTTPException(status_code=404, detail="Hint not found")
         
-    # Check if already unlocked
     existing = await db.scalar(
         select(ParticipantHint).where(
             ParticipantHint.participant_id == participant.id, 

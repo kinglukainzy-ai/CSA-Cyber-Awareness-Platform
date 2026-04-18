@@ -163,7 +163,7 @@ async def seed_data():
                 pass
         
         await db.commit()
-        print("Idempotent seeding complete!")
+        print("Seeding done.")
 
 if __name__ == "__main__":
     asyncio.run(seed_data())

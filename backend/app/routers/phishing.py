@@ -26,7 +26,6 @@ router = APIRouter(tags=["phishing"])
 PIXEL = b'\x47\x49\x46\x38\x39\x61\x01\x00\x01\x00\x80\x00\x00\xff\xff\xff\x00\x00\x00\x21\xf9\x04\x00\x00\x00\x00\x00\x2c\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02\x44\x01\x00\x3b'
 
 async def log_event(db: AsyncSession, campaign_id: str, participant_id: str, event_type: str, request: Request | None = None):
-    # This helper is used by tracking endpoints
     participant = await db.get(Participant, uuid.UUID(participant_id))
     if not participant:
         return
@@ -92,7 +91,7 @@ async def launch_phishing_campaign(
     for participant in participants:
         click_url = f"{tracking_base}/track/click?pid={participant.id}&cid={campaign.id}"
         open_url = f"{tracking_base}/track/open?pid={participant.id}&cid={campaign.id}"
-        submit_url = f"{tracking_base}/track/submit" # This one is generic usually or can be custom
+        submit_url = f"{tracking_base}/track/submit"
         
         # Replace placeholders in body_html
         personalized_html = template.body_html.replace("{{CLICK_URL}}", click_url)\
@@ -245,7 +244,7 @@ async def delete_phish_template(template_id: uuid.UUID, db: AsyncSession = Depen
     if campaign_exists > 0:
         raise HTTPException(
             status_code=409, 
-            detail="Template is used in one or more campaigns and cannot be deleted."
+            detail="Template is in use by an active campaign"
         )
         
     await db.delete(template)

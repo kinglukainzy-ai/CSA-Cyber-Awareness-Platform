@@ -49,9 +49,7 @@ async def list_polls(
                 .where(PollResponse.poll_id == poll.id)
                 .group_by(PollResponse.answer)
             )).all()
-            # answer is stored as JSONB like {"selected": "a"}
-            # We need to extract the 'selected' value for aggregated results
-            # The prompt says: "results": {"a": 12, "b": 4, "c": 1}
+            # aggregate vote counts by option
             agg_results = {}
             for ans, count in counts:
                 selected = ans.get("selected")

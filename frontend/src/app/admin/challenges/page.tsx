@@ -155,7 +155,6 @@ export default function ChallengeLibraryPage() {
     fetchChallenges();
   }, [fetchChallenges]);
 
-  // Handlers
   const handleToggleStatus = async (challenge: Challenge) => {
     try {
       await api(`/challenges/${challenge.id}`, {

@@ -48,17 +48,13 @@ async def connect(sid, environ, auth):
 
 
 async def is_admin(sid) -> bool:
-    """Helper to check if the current SID belongs to an authenticated admin."""
+    """True if sid is an authenticated admin."""
     session = await sio.get_session(sid)
     return session and session.get("role") == "admin"
 
 
 @sio.event
 async def join_session(sid, data):
-    """
-    Event for participants and instructors to join a session room.
-    Hardened: verifies participant belongs to the session.
-    """
     session_id = data.get("session_id")
     participant_id = data.get("participant_id")
     session_code = data.get("session_code")
@@ -100,10 +96,6 @@ async def join_session(sid, data):
 
 @sio.event
 async def unlock_challenge(sid, data):
-    """
-    Instructor unlocks a challenge for all participants in the session.
-    Persists unlocked_at to session_challenges via DB, then broadcasts.
-    """
     session_id = data.get("session_id")
     challenge_id = data.get("challenge_id")
     order_num = data.get("order_num", 0)
@@ -141,7 +133,7 @@ async def unlock_challenge(sid, data):
 
 @sio.event
 async def launch_poll(sid, data):
-    """Instructor launches a poll — broadcasts it to all participants."""
+    """Launch poll and broadcast to session."""
     session_id = data.get("session_id")
     poll_id = data.get("poll_id")
 
@@ -174,7 +166,7 @@ async def launch_poll(sid, data):
 
 @sio.event
 async def end_session(sid, data):
-    """Instructor ends session — transitions status and triggers report gen."""
+    """End session and kick off report generation."""
     session_id = data.get("session_id")
     admin_id = data.get("admin_id")
 

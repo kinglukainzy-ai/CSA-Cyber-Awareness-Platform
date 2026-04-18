@@ -18,7 +18,7 @@ celery.conf.update(
 
 
 class DLQTask(Task):
-    """Custom base task that logs permanently failed tasks to a Redis dead-letter list."""
+    """DLQ base task — logs failures to Redis."""
 
     def on_failure(self, exc, task_id, args, kwargs, einfo):
         try:

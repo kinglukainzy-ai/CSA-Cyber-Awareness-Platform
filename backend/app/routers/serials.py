@@ -149,9 +149,7 @@ async def submit_flag(
                 select(func.sum(ParticipantHint.points_deducted)).where(
                     ParticipantHint.participant_id == participant.id,
                     ParticipantHint.session_id == payload.session_id,
-                    # We need a way to link hint to challenge. 
-                    # ParticipantHint has hint_id, which links to ChallengeHint, which has challenge_id.
-                ).join(ParticipantHint.hint_id == ...) # Wait, I need a better query
+                )
             )
             # Corrected query for hints related to THIS challenge
             from app.models.hints import ChallengeHint

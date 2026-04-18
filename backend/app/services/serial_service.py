@@ -12,7 +12,6 @@ def generate_serial(challenge_id: str, participant_id: str) -> str:
         hashlib.sha256
     ).digest()
     # Base32 for safe display, first 10 bytes is enough for 16 chars (or 12-16 depending on padding)
-    # The prompt says "12-char base32 serial" in the definition of done.
     # Base32 encoding 7.5 bytes gives 12 chars. 10 bytes gives 16 chars.
     # Let's see: sig[:10] encoded in base32 is 16 chars. Sig[:7.5] is 12 chars.
     # Let's use sig[:10] as requested in the logic snippet, but trailing = trimmed.

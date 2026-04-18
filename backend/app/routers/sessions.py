@@ -195,7 +195,7 @@ async def remove_challenge(session_id: str, challenge_id: str, db: AsyncSession 
 
 @router.post("/{session_id}/challenges/{challenge_id}/unlock", dependencies=[Depends(get_current_admin)])
 async def unlock_challenge(session_id: str, challenge_id: str, db: AsyncSession = Depends(get_db)):
-    """Persist the unlock timestamp and broadcast to all participants via Socket.io."""
+    """Unlock challenge and notify participants."""
     sc = await db.scalar(
         select(SessionChallenge).where(
             SessionChallenge.session_id == uuid.UUID(session_id),
