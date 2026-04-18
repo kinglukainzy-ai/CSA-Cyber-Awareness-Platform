@@ -15,6 +15,8 @@ import { HintDrawer } from "@/components/participant/HintDrawer";
 import { PollWidget } from "@/components/participant/PollWidget";
 import { BreachWidget } from "@/components/participant/BreachWidget";
 import { SessionEndScreen } from "@/components/participant/SessionEndScreen";
+import { ScenarioChallenge } from "@/components/participant/ScenarioChallenge";
+import { DecisionChallenge } from "@/components/participant/DecisionChallenge";
 import {
   ShieldCheck,
   Users,
@@ -22,7 +24,6 @@ import {
   LogOut,
   AlertCircle,
   Clock,
-  ArrowRight
 } from "lucide-react";
 import type { Challenge, LeaderboardEntry } from "@/types";
 
@@ -66,7 +67,7 @@ export default function SessionPage() {
       connect();
       socket.emit("join_session", {
         session_id: participant.sessionId,
-        session_code: participant.sessionCode
+        session_code: participant.sessionCode,
       });
 
       socket.on("session_status", (payload: { status: string }) => {
@@ -74,7 +75,9 @@ export default function SessionPage() {
       });
 
       socket.on("challenge_unlocked", (payload: { challenge_id: string }) => {
-        setChallenges(prev => prev.map(c => c.id === payload.challenge_id ? { ...c, is_locked: false } : c));
+        setChallenges(prev =>
+          prev.map(c => c.id === payload.challenge_id ? { ...c, is_locked: false } : c)
+        );
       });
 
       socket.on("leaderboard_update", (payload: { leaderboard: LeaderboardEntry[] }) => {
@@ -140,9 +143,10 @@ export default function SessionPage() {
                     <span className="text-xs font-black uppercase tracking-widest">LIVE ENGAGEMENT</span>
                   </div>
                   <h1 className="text-4xl font-black tracking-tight">{params.code}</h1>
-                  <p className="mt-1 text-brand-100 font-medium opacity-80">Organisation: {participant.sessionId ? 'Ghana CSA' : 'Trial'}</p>
+                  <p className="mt-1 text-brand-100 font-medium opacity-80">
+                    Organisation: {participant.sessionId ? "Ghana CSA" : "Trial"}
+                  </p>
                 </div>
-
                 <div className="flex items-center gap-4 rounded-2xl bg-white/10 p-4 backdrop-blur-md">
                   <div className="text-right">
                     <p className="text-[10px] font-black uppercase tracking-widest text-brand-200">Session Status</p>
@@ -186,16 +190,15 @@ export default function SessionPage() {
                 </div>
 
                 <div className="prose prose-slate max-w-none">
-                  {activeChallenge.category === "CTF" ? (
+                  {activeChallenge.type === "ctf" ? (
                     <div className="flex flex-col gap-6">
                       <div className="rounded-xl bg-slate-900 p-6 text-emerald-400 font-mono text-sm">
                         <div className="flex items-center gap-2 border-b border-white/10 pb-4 mb-4 text-white">
                           <Terminal className="h-4 w-4" />
                           MISSION INTELLIGENCE
                         </div>
-                        <p>{activeChallenge.content?.scenario || "No intelligence provided for this mission."}</p>
+                        <p>{activeChallenge.content?.scenario || "No intelligence provided."}</p>
                       </div>
-
                       <div className="flex flex-col gap-4 border-t border-slate-100 pt-6">
                         <label className="text-sm font-bold text-slate-700">SUBMIT RECOVERED FLAG</label>
                         <FlagSubmit
@@ -205,11 +208,14 @@ export default function SessionPage() {
                         />
                       </div>
                     </div>
+                  ) : activeChallenge.type === "scenario" ? (
+                    <ScenarioChallenge challenge={activeChallenge} />
+                  ) : activeChallenge.type === "decision" ? (
+                    <DecisionChallenge challenge={activeChallenge} />
                   ) : (
                     <div className="p-10 text-center border-2 border-dashed border-slate-200 rounded-3xl">
                       <AlertCircle className="h-12 w-12 mx-auto text-slate-300 mb-4" />
-                      <p className="font-bold text-slate-900">Scenario Exercise</p>
-                      <p className="text-sm text-slate-500">Wait for the instructor to launch the interactive portion of this scenario.</p>
+                      <p className="font-bold text-slate-900">Challenge type not supported yet.</p>
                     </div>
                   )}
                 </div>
@@ -232,7 +238,6 @@ export default function SessionPage() {
 
           <aside className="flex flex-col gap-8">
             <Leaderboard entries={leaderboard} />
-
             <Card className="flex flex-col gap-4 border-none bg-white p-6 shadow-xl shadow-brand-700/5">
               <div className="flex items-center gap-2">
                 <AlertCircle className="h-4 w-4 text-brand-700" />
@@ -247,7 +252,6 @@ export default function SessionPage() {
         </div>
       </main>
 
-      {/* Live Components */}
       <PollWidget
         sessionId={participant.sessionId!}
         participantUuid={participant.participantUuid!}

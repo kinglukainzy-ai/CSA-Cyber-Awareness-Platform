@@ -8,10 +8,10 @@ import { PollController } from "@/components/instructor/PollController";
 import { ScoreBoard } from "@/components/instructor/ScoreBoard";
 import { Card } from "@/components/ui/Card";
 import { useSocket } from "@/providers/SocketProvider";
-import { 
-  Monitor, 
-  Settings, 
-  ExternalLink, 
+import {
+  Monitor,
+  Settings,
+  ExternalLink,
   Share2,
   AlertCircle
 } from "lucide-react";
@@ -29,7 +29,10 @@ export default function SessionDetailPage() {
 
     // Connect manually when page mounts
     connect();
-    socket.emit("join_session", { session_id: sessionId });
+    socket.emit("join_session", {
+      session_id: sessionId,
+      session_code: null  // admin has no session code — backend handles this
+    });
 
     return () => {
       // Disconnect when page unmounts
@@ -43,8 +46,8 @@ export default function SessionDetailPage() {
       <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2 text-brand-700">
-             <Monitor className="h-4 w-4" />
-             <span className="text-[10px] font-black uppercase tracking-widest">Master Control Room</span>
+            <Monitor className="h-4 w-4" />
+            <span className="text-[10px] font-black uppercase tracking-widest">Master Control Room</span>
           </div>
           <h1 className="text-4xl font-black tracking-tight text-slate-900">Engagement Command</h1>
         </div>
@@ -68,9 +71,9 @@ export default function SessionDetailPage() {
           <section>
             <LiveDashboard sessionId={sessionId} />
           </section>
-          
+
           <section>
-             <PollController sessionId={sessionId} totalParticipants={0} />
+            <PollController sessionId={sessionId} totalParticipants={0} />
           </section>
         </div>
 
