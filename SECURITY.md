@@ -2,19 +2,19 @@
 
 ## Security Hardening (v1.1.1)
 
-In version 1.1.1, we have implemented several critical security enhancements to ensure production readiness:
+In version 1.1.1, we implemented security enhancements for production readiness:
 
-### 1. JWT Revocation & Blacklisting
-The platform now supports real-time token revocation. When a user logs out or an administrator terminates a session, the associated JWT (identified by its `jti` claim) is blacklisted in Redis with a TTL matching the token's remaining expiry. All authenticated endpoints and socket connections verify the blacklist status during every request/handshake.
+### JWT Revocation and Blacklisting
+The platform supports real-time token revocation. When a user logs out or an administrator terminates a session, the JWT is blacklisted in Redis. Authenticated endpoints and socket connections verify the blacklist status during every request.
 
-### 2. Participant Session Binding
-To prevent cross-session data leakage and unauthorized access, all participant-facing endpoints now require a mandatory `X-Session-Code` header. This header is validated against the database to ensure the participant is active within the specified session.
+### Participant Session Binding
+All participant-facing endpoints require an `X-Session-Code` header to prevent data leakage. This header is validated against the database to ensure the participant is active in the specified session.
 
-### 3. Redis Authentication
-Redis instances are now password-protected by default. The `REDIS_PASSWORD` environment variable must be configured in production to allow the backend and workers to communicate with the cache/broker.
+### Redis Authentication
+Redis instances are password-protected. Configure the `REDIS_PASSWORD` environment variable in production to allow backend and workers to communicate with the cache and broker.
 
-### 4. Socket.io Handshake Hardening
-The Socket.io gateway has been hardened to require a valid JWT during the initial handshake. Connection attempts without a valid token or with a blacklisted token are rejected before a websocket connection is established. Additionally, sensitive events (e.g., `start_phishing`, `unlock_challenge`) are restricted to users with `admin` claims at the socket handler level.
+### Socket.io Handshake Hardening
+The Socket.io gateway requires a valid JWT during the handshake. Connections without a valid or blacklisted token are rejected before they establish. Sensitive events are restricted to users with `admin` claims at the socket handler level.
 
 ---
 
@@ -29,12 +29,11 @@ Only the latest `main` branch of this platform is currently supported with secur
 
 ## Reporting a Vulnerability
 
-The Cyber Security Authority (CSA) Ghana takes the security of its infrastructure and platforms seriously. If you believe you have found a security vulnerability, please report it to us responsibly.
+The Cyber Security Authority (CSA) Ghana takes security seriously. If you find a security vulnerability, please report it to us responsibly. 
 
-**Please do not report security vulnerabilities through public GitHub issues.**
+**Do not report vulnerabilities through public GitHub issues.**
 
-Instead, please report them via email to:
-**lquansah.intern@csa.gov.gh**
+Report via email to: **lquansah.intern@csa.gov.gh**
 
 Please include the following in your report:
 

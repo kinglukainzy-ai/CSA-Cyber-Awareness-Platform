@@ -1,6 +1,6 @@
 # CSA Cyber Awareness Platform
 
-A comprehensive, live-session cybersecurity training platform built for Ghana's Cyber Security Authority (CSA). This platform enables instructors to run real-time phishing simulations, CTF challenges, live polls, and automated impact reporting.
+A live-session cybersecurity training platform built for Ghana's Cyber Security Authority (CSA). Instructors use this to run real-time phishing simulations, CTF challenges, live polls, and automated impact reporting.
 
 ---
 
@@ -8,27 +8,26 @@ A comprehensive, live-session cybersecurity training platform built for Ghana's 
 
 ## Prerequisites
 
-Before running the platform, ensure you have:
-- **Docker** and **Docker Compose V2** installed.
-- **Port 80/443** open on your server firewall.
-- **OpenSSL** (for secret generation).
-
-- **Domain Name** (Optional, DuckDNS is supported natively).
+You need:
+- Docker and Docker Compose V2 installed.
+- Port 80/443 open on your server firewall.
+- OpenSSL to generate secrets.
+- A domain name (DuckDNS is supported natively).
 
 ---
 
-## Deployment (Linux)
+## Linux Deployment
 
-Our interactive setup tool handles dependency checks, TLS certificate provisioning (Certbot), and full stack orchestration.
+The setup tool handles dependency checks, TLS certificate provisioning via Certbot, and stack orchestration.
 
 ```bash
 chmod +x install.sh
 sudo ./install.sh
 ```
 
-## Deployment (Windows)
+## Windows Deployment
 
-We provide a native PowerShell orchestrator that integrates with Windows Task Scheduler for certificate auto-renewal.
+The PowerShell orchestrator integrates with Windows Task Scheduler for certificate auto-renewal.
 
 ```powershell
 Set-ExecutionPolicy RemoteSigned -Scope Process
@@ -39,11 +38,7 @@ Set-ExecutionPolicy RemoteSigned -Scope Process
 
 ## Technology Stack
 
-- **Frontend**: Next.js 14, TypeScript, Tailwind CSS, Framer Motion.
-- **Backend**: FastAPI (Python 3.12), SQLAlchemy 2.0.
-- **Real-time**: Socket.io (Hardened with JWT handshake and admin-only event blocking).
-- **Infrastructure**: Traefik (Edge Proxy), Certbot (TLS), Docker Compose, Redis, PostgreSQL.
-- **Reporting**: WeasyPrint (PDF Gen) and MinIO (S3-compatible storage).
+The stack uses Next.js 14 and Tailwind for the UI, with a FastAPI and SQLAlchemy 2.0 backend. Real-time updates use Socket.io with JWT handshakes and admin-only event blocking. Infrastructure is managed via Traefik, Certbot, Docker Compose, Redis, and PostgreSQL. PDF reports are generated with WeasyPrint and stored in MinIO.
 
 ---
 
@@ -57,37 +52,32 @@ Set-ExecutionPolicy RemoteSigned -Scope Process
 
 ---
 
-## Maintenance & Monitoring
+## Maintenance and Monitoring
 
-The deployment scripts automatically configure automated renewals, but you can manage them manually using these helpers:
+Deployment scripts configure renewals, but you can manage them manually using these helpers:
 
-- **Linux**:
-  - `/renew-cert.sh`: Force certificate renewal.
-  - `/check-cert.sh`: Verify certificate status and expiry.
-- **Windows**:
-  - `.\renew-cert.ps1`: Manual renewal (stops/starts Traefik).
-  - `.\check-cert.ps1`: Status dashboard.
+- Linux: `/renew-cert.sh` and `/check-cert.sh`
+- Windows: `.\renew-cert.ps1` and `.\check-cert.ps1`
 
-## Security Hardening
+## Security
 
-This platform implements several production-grade security measures:
-- **Socket.io Authentication**: Mandatory JWT handshake; unauthorized connections are rejected before connecting.
-- **Role-Based Handlers**: Sensitive instructor actions (ending sessions, launching polls) are blocked at the socket level if the user lacks admin claims.
-- **Ephemeral Secrets**: Installers auto-generate unique `JWT_SECRET` and `SERIAL_SECRET` for every deployment.
-
-- **Token Security**: Default JWT access tokens expire after 30 minutes.
-- **JWT Revocation**: Real-time token blacklisting via Redis during logout or administrative session termination.
-- **Participant Isolation**: All participant endpoints require a valid `X-Session-Code` header, binding the client to a specific training instance.
+The platform uses these security measures:
+- Socket.io uses mandatory JWT handshakes to reject unauthorized connections before they start.
+- Instructor actions like ending sessions or launching polls are blocked at the socket level without admin claims.
+- Installers generate unique `JWT_SECRET` and `SERIAL_SECRET` for each deployment.
+- JWT access tokens expire after 30 minutes by default.
+- Tokens are blacklisted in Redis during logout or session termination.
+- Participant endpoints require an `X-Session-Code` header to bind the client to a training instance.
 
 ---
 
-## Core Features
+## Features
 
-- **Real-time Command Center**: Live telemetry feed from participants and manual challenge progression.
-- **Phishing Engine**: Sandboxed template preview and real-time click/open tracking.
-- **Breach Scout**: HIBP-integrated identity exposure checking (K-anonymity).
-- **Automated Reporting**: Generates 6-section professional impact reports for organizations.
-- **Challenge Library**: Centralized repository for Missions, Scenarios, and Quizzes.
+- Real-time command center with live participant telemetry and challenge progression.
+- Phishing engine with sandboxed previews and click/open tracking.
+- Breach Scout for HIBP identity exposure checks using k-anonymity.
+- Automated 6-section impact reports for organizations.
+- Challenge library for missions, scenarios, and quizzes.
 
 ---
 
