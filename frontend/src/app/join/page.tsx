@@ -63,7 +63,9 @@ export default function JoinPage() {
                   <h2 className="text-2xl font-bold text-slate-900">Participant Access</h2>
                   <p className="text-sm text-slate-500">Secure entry for Ghana CSA training modules.</p>
                 </div>
-                <JoinForm />
+                <Suspense fallback={<div>Loading...</div>}>
+  <JoinForm />
+</Suspense>
               </Card>
             </div>
           </div>
