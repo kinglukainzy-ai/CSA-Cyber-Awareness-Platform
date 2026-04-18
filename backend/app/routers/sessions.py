@@ -238,14 +238,10 @@ async def get_session_report(session_id: str, db: AsyncSession = Depends(get_db)
     if not report:
         raise HTTPException(status_code=404, detail="Report not generated yet")
     
-    # Generate fresh URL if ready
+    # Generate a fresh, short-lived presigned URL on demand (1 hour TTL)
     if report.status == "ready" and report.storage_path:
         from app.services.storage_service import get_download_url
-        # We don't want to mutate the DB object's path permanently if it's stored as path
-        # But here we are returning it in the response. SessionReport model has storage_path as Text.
-        # It's better to return a schema that has the URL.
-        # For now, we'll just return the object with the URL in the storage_path field for the response.
-        report.storage_path = get_download_url(report.storage_path)
+        report.storage_path = get_download_url(report.storage_path, expires_in=3600)
         
     return report
 

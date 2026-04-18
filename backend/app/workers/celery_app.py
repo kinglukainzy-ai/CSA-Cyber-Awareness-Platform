@@ -1,4 +1,6 @@
-from celery import Celery
+from celery import Celery, Task
+import json
+import time
 
 from app.config import settings
 
@@ -13,3 +15,27 @@ celery.conf.update(
     task_reject_on_worker_lost=True,
     worker_prefetch_multiplier=1,
 )
+
+
+class DLQTask(Task):
+    """Custom base task that logs permanently failed tasks to a Redis dead-letter list."""
+
+    def on_failure(self, exc, task_id, args, kwargs, einfo):
+        try:
+            from app.services.redis_service import get_redis_client
+            client = get_redis_client()
+            client.rpush("celery:dead_letter_queue", json.dumps({
+                "task_id": task_id,
+                "task_name": self.name,
+                "args": str(args),
+                "kwargs": str(kwargs),
+                "exception": str(exc),
+                "traceback": str(einfo),
+                "failed_at": time.time(),
+            }))
+        except Exception:
+            pass  # Don't let DLQ logging break the failure handler
+        super().on_failure(exc, task_id, args, kwargs, einfo)
+
+
+celery.Task = DLQTask
