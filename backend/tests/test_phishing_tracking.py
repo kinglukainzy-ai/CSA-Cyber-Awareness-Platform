@@ -15,7 +15,7 @@ async def test_track_open_invalid_uuid(client):
 async def test_track_click_nonexistent_campaign(client):
     """GET /track/click with a valid format but non-existent campaign ID returns 302"""
     # log_event swallows the error if cid doesn't exist or is invalid
-    response = await client.get(f"/track/click?pid={uuid.uuid4()}&cid={uuid.uuid4()}")
+    response = await client.get(f"/api/v1/track/click?pid={uuid.uuid4()}&cid={uuid.uuid4()}")
     assert response.status_code == 302
     assert "/phishing/catch" in response.headers["location"]
 

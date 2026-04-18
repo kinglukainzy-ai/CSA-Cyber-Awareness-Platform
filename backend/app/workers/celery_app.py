@@ -22,8 +22,7 @@ class DLQTask(Task):
 
     def on_failure(self, exc, task_id, args, kwargs, einfo):
         try:
-            from app.services.redis_service import get_redis_client
-            client = get_redis_client()
+            from app.services.redis_service import _client as client
             client.rpush("celery:dead_letter_queue", json.dumps({
                 "task_id": task_id,
                 "task_name": self.name,

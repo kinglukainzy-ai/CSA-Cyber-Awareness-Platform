@@ -2,12 +2,13 @@ import pytest
 import uuid
 from sqlalchemy import select
 from unittest.mock import MagicMock
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from app.models.challenge import Challenge
 from app.routers.deps import get_current_admin
 from app.main import app
 
 @pytest.mark.asyncio
-async def test_update_challenge_persistence(client, db_session):
+async def test_update_challenge_persistence(client, db_session, test_engine):
     # 1. Create a Challenge row directly via the ORM model in the test DB
     challenge = Challenge(
         title="Initial Challenge",
@@ -38,21 +39,25 @@ async def test_update_challenge_persistence(client, db_session):
     response = await client.put(f"/api/v1/challenges/{str(challenge.id)}", json=update_data)
     assert response.status_code == 200
 
-    # 2. Verify in DB
+    # 2. Verify in DB via the original session first
     updated = await db_session.get(Challenge, challenge.id)
     assert updated.title == "Hardened Challenge"
     
-    # 3. Open a second independent check (expire current session view to force refetch)
-    db_session.expire_all()
+    # 3. Open a second independent session to force a fresh DB fetch without connection cache
+    SessionLocal = async_sessionmaker(
+        test_engine, 
+        expire_on_commit=False, 
+        class_=AsyncSession
+    )
     
-    # Fetch directly from DB session again
-    query = select(Challenge).where(Challenge.id == challenge_id)
-    result = await db_session.execute(query)
-    updated_challenge = result.scalar_one()
-    
-    # 4. Assert the title and points values match what was sent in the PUT
-    assert updated_challenge.title == "Hardened Challenge"
-    assert updated_challenge.points == 100
+    async with SessionLocal() as session2:
+        query = select(Challenge).where(Challenge.id == challenge_id)
+        result = await session2.execute(query)
+        updated_challenge = result.scalar_one()
+        
+        # 4. Assert the title and points values match what was sent in the PUT
+        assert updated_challenge.title == "Hardened Challenge"
+        assert updated_challenge.points == 100
     
     # Cleanup override
     app.dependency_overrides.pop(get_current_admin, None)

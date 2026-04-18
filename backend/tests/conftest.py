@@ -44,7 +44,7 @@ async def db_session(test_engine):
     await transaction.rollback()
     await connection.close()
 
-@pytest_asyncio.fixture(scope="session")
+@pytest_asyncio.fixture
 async def client():
     # We use a session-scoped client for general tests
     # Individual tests can override get_db if needed, but here we set it globally for the client
@@ -65,6 +65,11 @@ def settings_override():
 @pytest.fixture(autouse=True)
 def mock_redis():
     with patch("app.services.redis_service._client", new_callable=MagicMock) as mocked:
+        yield mocked
+
+@pytest.fixture(autouse=True)
+def mock_celery():
+    with patch("app.routers.sessions.generate_report_task", new_callable=MagicMock) as mocked:
         yield mocked
 
 @pytest.fixture(autouse=True)
