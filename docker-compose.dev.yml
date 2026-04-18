@@ -12,17 +12,17 @@ services:
     volumes:
       - postgres_dev_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U csa -d csa_platform"]
+      test: [ "CMD-SHELL", "pg_isready -U csa -d csa_platform" ]
       interval: 5s
-      timeout: 5s
-      retries: 5
+      timeout: 10s
+      retries: 10
 
   redis:
     image: redis:7-alpine
     ports:
       - "6379:6379"
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: [ "CMD", "redis-cli", "ping" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -37,7 +37,7 @@ services:
       - "9000:9000"
       - "9001:9001"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -46,7 +46,8 @@ services:
 
   backend:
     build: ./backend
-    command: sh -c "alembic upgrade head && uvicorn app.main:socket_app --host 0.0.0.0 --port 8000 --reload"
+    working_dir: /app
+    command: sh -c "PYTHONPATH=/app alembic upgrade head && PYTHONPATH=/app uvicorn app.main:socket_app --host 0.0.0.0 --port 8000 --reload"
     ports:
       - "8000:8000"
     environment:
@@ -84,7 +85,8 @@ services:
 
   worker:
     build: ./backend
-    command: celery -A app.workers.celery_app worker --loglevel=info
+    working_dir: /app
+    command: sh -c "PYTHONPATH=/app celery -A app.workers.celery_app worker --loglevel=info"
     environment:
       - DATABASE_URL=postgresql+asyncpg://csa:devpass@postgres:5432/csa_platform
       - REDIS_URL=redis://redis:6379/0
@@ -93,8 +95,21 @@ services:
       - MINIO_ENDPOINT=minio:9000
       - MINIO_ACCESS_KEY=minioadmin
       - MINIO_SECRET_KEY=minioadmin
+      - MINIO_BUCKET=csa-reports
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - SMTP_HOST=mailhog
+      - SMTP_PORT=1025
+      - SMTP_USER=dev@csa.dev
+      - SMTP_PASSWORD=devpass
+      - SMTP_FROM_NAME=CSA Dev Platform
+      - HIBP_API_KEY=dummy_dev_key
+      - HIBP_API_URL=https://haveibeenpwned.com/api/v3/breachedaccount
+      - FRONTEND_URL=http://localhost:3000
+      - API_URL=http://localhost:8000
+      - TRACKING_BASE_URL=http://localhost:8000
+      - SEED_ADMIN_EMAIL=admin@csa.dev
+      - SEED_ADMIN_PASSWORD=admin1234
     depends_on:
       postgres:
         condition: service_healthy

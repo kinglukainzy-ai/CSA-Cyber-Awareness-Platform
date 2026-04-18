@@ -11,7 +11,8 @@ from app.services.pdf_service import build_session_report_pdf
 from app.services.email_service import send_email
 from app.services.storage_service import upload_file, get_download_url
 from app.database import AsyncSessionLocal
-from app.models.session import Session, SessionReport
+from app.models.session import Session
+from app.models.report import SessionReport
 from app.models.organisation import Organisation
 from app.models.participant import Participant
 from app.models.breach import BreachCheckEvent

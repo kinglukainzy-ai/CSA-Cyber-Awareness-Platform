@@ -6,8 +6,7 @@ import { useForm } from "react-hook-form";
 import { useParticipantStore, resolveParticipant } from "@/lib/participant-store";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { Loader2, ArrowRight } from "lucide-react";
-import { ShieldCheck as ShieldIcon, ArrowRight as ArrowIcon } from "lucide-react";
+import { Loader2, ArrowRight, ShieldCheck as ShieldIcon } from "lucide-react";
 
 type JoinPayload = {
   session_code: string;
@@ -92,7 +91,7 @@ export function JoinForm() {
           <Loader2 className="h-5 w-5 animate-spin" />
         ) : (
           <div className="flex items-center">
-            Start Experience <ArrowIcon className="ml-2 h-5 w-5" />
+            Start Experience <ArrowRight className="ml-2 h-5 w-5" />
           </div>
         )}
       </Button>

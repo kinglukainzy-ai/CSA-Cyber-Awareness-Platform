@@ -67,7 +67,7 @@ export default function HomePage() {
               <div className="mb-8 flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-700 text-white shadow-lg">
                 <MailWarning className="h-6 w-6" />
               </div>
-              <BreachWidget />
+              <BreachWidget sessionId="" participantUuid="" />
             </Card>
             
             <Card className="absolute -bottom-10 -left-10 hidden w-64 border-2 border-white bg-white/80 p-6 shadow-2xl backdrop-blur-xl lg:block">

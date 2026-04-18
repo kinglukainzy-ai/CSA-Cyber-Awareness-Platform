@@ -70,7 +70,7 @@ export default function SessionDetailPage() {
           </section>
           
           <section>
-             <PollController sessionId={sessionId} />
+             <PollController sessionId={sessionId} totalParticipants={0} />
           </section>
         </div>
 

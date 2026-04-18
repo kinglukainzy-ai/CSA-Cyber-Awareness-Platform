@@ -2,6 +2,13 @@ import { JoinForm } from "@/components/participant/JoinForm";
 import { Card } from "@/components/ui/Card";
 import { Logo } from "@/components/shared/Logo";
 import { ShieldCheck, Monitor, Zap } from "lucide-react";
+import { Suspense } from "react";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Join Session | CSA Cyber Awareness Platform",
+  description: "Securely join a live cybersecurity awareness session with the Ghana Cyber Security Authority.",
+};
 
 export default function JoinPage() {
   return (
@@ -63,9 +70,14 @@ export default function JoinPage() {
                   <h2 className="text-2xl font-bold text-slate-900">Participant Access</h2>
                   <p className="text-sm text-slate-500">Secure entry for Ghana CSA training modules.</p>
                 </div>
-                <Suspense fallback={<div>Loading...</div>}>
-  <JoinForm />
-</Suspense>
+                <Suspense fallback={
+                  <div className="flex flex-col items-center justify-center py-12 text-slate-400">
+                    <div className="mb-4 h-8 w-8 animate-spin rounded-full border-4 border-brand-700/20 border-t-brand-700"></div>
+                    <span className="text-sm font-medium">Preparing secure gateway...</span>
+                  </div>
+                }>
+                  <JoinForm />
+                </Suspense>
               </Card>
             </div>
           </div>

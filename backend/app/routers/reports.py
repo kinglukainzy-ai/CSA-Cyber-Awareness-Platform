@@ -3,7 +3,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
-from app.models.session import SessionReport
+from app.models.report import SessionReport
 from app.models.admin import Admin
 from app.routers.deps import get_current_admin
 from app.workers.tasks import generate_report_task

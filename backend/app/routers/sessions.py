@@ -12,7 +12,8 @@ from app.database import get_db
 from app.models.admin import Admin
 from app.models.challenge import Challenge
 from app.models.participant import Participant
-from app.models.session import Session, SessionChallenge, SessionReport
+from app.models.session import Session, SessionChallenge
+from app.models.report import SessionReport
 from app.routers.deps import get_current_admin
 from app.schemas.session import SessionAssignChallenges, SessionCreate, SessionOut, SessionStatusUpdate
 from app.sockets.events import emit_session_status
