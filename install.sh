@@ -165,7 +165,8 @@ while true; do
     # Group F: Secrets
     JWT_SECRET=$(openssl rand -hex 32)
     SERIAL_SECRET=$(openssl rand -hex 32)
-    log "Generated JWT and Serial secrets automatically."
+    REDIS_PASSWORD=$(openssl rand -hex 24)
+    log "Generated JWT, Serial, and Redis secrets automatically."
 
     # --- SECTION 3: Summary and Confirmation ---
     echo -e "\n${BLUE}${BOLD}=== Configuration Summary ===${NC}"
@@ -176,6 +177,7 @@ while true; do
     printf "%-25s : %s\n" "Admin Password" "$(mask "$ADMIN_PASS")"
     printf "%-25s : %s\n" "SMTP Host" "$SMTP_HOST"
     printf "%-25s : %s\n" "DB Password" "$(mask "$DB_PASSWORD")"
+    printf "%-25s : %s\n" "Redis Password" "$(mask "$REDIS_PASSWORD")"
     printf "%-25s : %s\n" "MinIO User/Pass" "$MINIO_USER / $(mask "$MINIO_PASSWORD")"
     printf "%-25s : %s\n" "HIBP API Key" "$(mask "$HIBP_API_KEY")"
 
@@ -343,9 +345,10 @@ NEXT_PUBLIC_API_URL=$PROTO://api.$DOMAIN/api/v1
 NEXT_PUBLIC_SOCKET_URL=$PROTO://api.$DOMAIN
 
 DATABASE_URL=postgresql+asyncpg://csa:$DB_PASSWORD@postgres:5432/csa_platform
-REDIS_URL=redis://redis:6379/0
-CELERY_BROKER_URL=redis://redis:6379/1
-CELERY_RESULT_BACKEND=redis://redis:6379/2
+REDIS_PASSWORD=$REDIS_PASSWORD
+REDIS_URL=redis://:$REDIS_PASSWORD@redis:6379/0
+CELERY_BROKER_URL=redis://:$REDIS_PASSWORD@redis:6379/0
+CELERY_RESULT_BACKEND=redis://:$REDIS_PASSWORD@redis:6379/0
 
 JWT_SECRET=$JWT_SECRET
 JWT_ALGORITHM=HS256

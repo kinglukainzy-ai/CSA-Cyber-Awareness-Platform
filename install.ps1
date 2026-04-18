@@ -151,7 +151,8 @@ while ($true) {
     [System.Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($serialBytes)
     $config.JWT_SECRET = [System.BitConverter]::ToString($jwtBytes).Replace("-","").ToLower()
     $config.SERIAL_SECRET = [System.BitConverter]::ToString($serialBytes).Replace("-","").ToLower()
-    Write-Log "Generated JWT and Serial secrets automatically."
+    $config.REDIS_PASSWORD = [System.Convert]::ToHexString([System.Security.Cryptography.RandomNumberGenerator]::GetBytes(24)).ToLower()
+    Write-Log "Generated JWT, Serial, and Redis secrets automatically."
 
     # --- SECTION 3: Summary and Confirmation ---
     Write-Host "`n=== Configuration Summary ===" -ForegroundColor Blue
@@ -161,6 +162,7 @@ while ($true) {
     printf "%-25s : %s`n" "Admin Email" $config.ADMIN_EMAIL
     printf "%-25s : %s`n" "Admin Password" (mask $config.ADMIN_PASS)
     printf "%-25s : %s`n" "DB Password" (mask $config.DB_PASSWORD)
+    printf "%-25s : %s`n" "Redis Password" (mask $config.REDIS_PASSWORD)
     printf "%-25s : %s`n" "MinIO User/Pass" "$($config.MINIO_USER) / $(mask $config.MINIO_PASSWORD)"
 
     $confirm = Read-Host "Does everything look correct? (yes/no)"
@@ -320,9 +322,10 @@ NEXT_PUBLIC_API_URL=$proto://api.$($config.DOMAIN)/api/v1
 NEXT_PUBLIC_SOCKET_URL=$proto://api.$($config.DOMAIN)
 
 DATABASE_URL=postgresql+asyncpg://csa:$($config.DB_PASSWORD)@postgres:5432/csa_platform
-REDIS_URL=redis://redis:6379/0
-CELERY_BROKER_URL=redis://redis:6379/1
-CELERY_RESULT_BACKEND=redis://redis:6379/2
+REDIS_PASSWORD=$($config.REDIS_PASSWORD)
+REDIS_URL=redis://:$($config.REDIS_PASSWORD)@redis:6379/0
+CELERY_BROKER_URL=redis://:$($config.REDIS_PASSWORD)@redis:6379/0
+CELERY_RESULT_BACKEND=redis://:$($config.REDIS_PASSWORD)@redis:6379/0
 
 JWT_SECRET=$($config.JWT_SECRET)
 JWT_ALGORITHM=HS256
