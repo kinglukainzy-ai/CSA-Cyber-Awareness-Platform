@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 from sqlalchemy import ForeignKey, Integer, Text, DateTime
@@ -26,4 +26,4 @@ class ParticipantHint(Base, UUIDPrimaryKeyMixin):
     hint_id: Mapped[int] = mapped_column(Integer, ForeignKey("challenge_hints.id"))
     session_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("sessions.id"))
     points_deducted: Mapped[int] = mapped_column(Integer, nullable=False)
-    unlocked_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now())
+    unlocked_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))

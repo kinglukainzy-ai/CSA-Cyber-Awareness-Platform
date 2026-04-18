@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
 from app.models.poll import Poll, PollResponse
 from app.models.participant import Participant
-from app.routers.deps import get_current_admin
+from app.routers.deps import get_current_admin, get_participant_uuid
 from app.schemas.poll import PollCreate, PollResponseCreate
 from app.sockets.events import emit_poll_launched, emit_poll_results
 
@@ -110,13 +110,10 @@ async def launch_poll(
 async def respond_to_poll(
     poll_id: uuid.UUID,
     payload: PollResponseCreate,
-    x_participant_uuid: uuid.UUID = Header(...),
+    participant: Participant = Depends(get_participant_uuid),
     db: AsyncSession = Depends(get_db)
 ):
-    # Verify participant exists
-    participant = await db.get(Participant, x_participant_uuid)
-    if not participant:
-        raise HTTPException(status_code=403, detail="Invalid participant UUID")
+    # No need to verify participant exists, dependency does it
 
     poll = await db.get(Poll, poll_id)
     if not poll:
@@ -126,7 +123,7 @@ async def respond_to_poll(
     existing_response = (await db.execute(
         select(PollResponse).where(
             PollResponse.poll_id == poll_id,
-            PollResponse.participant_id == x_participant_uuid
+            PollResponse.participant_id == participant.id
         )
     )).scalar_one_or_none()
 
@@ -136,7 +133,7 @@ async def respond_to_poll(
     else:
         response = PollResponse(
             poll_id=poll_id,
-            participant_id=x_participant_uuid,
+            participant_id=participant.id,
             session_id=payload.session_id,
             answer=payload.answer,
             responded_at=datetime.now(timezone.utc)

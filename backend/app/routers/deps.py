@@ -25,7 +25,12 @@ def verify_password(password: str, hashed: str) -> bool:
 
 
 def create_token(subject: str, expires_delta: timedelta) -> str:
-    payload = {"sub": subject, "exp": datetime.now(timezone.utc) + expires_delta}
+    jti = str(uuid.uuid4())
+    payload = {
+        "sub": subject, 
+        "exp": datetime.now(timezone.utc) + expires_delta,
+        "jti": jti
+    }
     return jwt.encode(payload, settings.jwt_secret, algorithm=settings.jwt_algorithm)
 
 
@@ -41,7 +46,14 @@ async def get_current_admin(
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing token")
     try:
         payload = jwt.decode(access_token, settings.jwt_secret, algorithms=[settings.jwt_algorithm])
+        jti = payload.get("jti")
+        if jti:
+            from app.services.redis_service import is_token_blacklisted
+            if is_token_blacklisted(jti):
+                raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token revoked")
         admin_id = payload["sub"]
+    except HTTPException:
+        raise
     except Exception as exc:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token") from exc
     admin = await db.scalar(select(Admin).where(Admin.id == uuid.UUID(admin_id)))
@@ -58,9 +70,18 @@ async def get_superadmin(admin: Admin = Depends(get_current_admin)) -> Admin:
 
 async def get_participant_uuid(
     x_participant_uuid: str = Header(..., alias="X-Participant-UUID"),
+    x_session_code: str = Header(..., alias="X-Session-Code"),
     db: AsyncSession = Depends(get_db),
 ) -> Participant:
-    participant = await db.scalar(select(Participant).where(Participant.id == uuid.UUID(x_participant_uuid)))
+    from app.models.session import Session
+    participant = await db.scalar(
+        select(Participant)
+        .join(Session, Session.id == Participant.session_id)
+        .where(
+            Participant.id == uuid.UUID(x_participant_uuid),
+            Session.join_code == x_session_code
+        )
+    )
     if not participant:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Participant not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Participant not found or session mismatch")
     return participant

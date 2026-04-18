@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 from sqlalchemy import DateTime, ForeignKey, Text
@@ -17,4 +17,4 @@ class SessionReport(Base, UUIDPrimaryKeyMixin):
     status: Mapped[str] = mapped_column(Text, nullable=False) # 'generating', 'ready', 'failed'
     storage_path: Mapped[Optional[str]] = mapped_column(Text)
     summary_snapshot: Mapped[Optional[dict]] = mapped_column(JSONB)
-    generated_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now())
+    generated_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))

@@ -19,6 +19,6 @@ async def check_breach(email: str) -> dict:
                 "breach_count": len(breaches),
                 "breaches": [b["Name"] for b in breaches]
             }
-        except Exception as e:
-            print(f"[breach_service] Error checking breach: {e}")
-            return {"is_breached": False, "breach_count": 0, "error": str(e)}
+        except Exception:
+            print("[breach_service] Error checking breach (email masked)")
+            return {"is_breached": False, "breach_count": 0, "error": "External service error"}

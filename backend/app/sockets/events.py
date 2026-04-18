@@ -26,6 +26,13 @@ async def connect(sid, environ, auth):
                 settings.jwt_secret, 
                 algorithms=[settings.jwt_algorithm]
             )
+            jti = payload.get("jti")
+            if jti:
+                from app.services.redis_service import is_token_blacklisted
+                if is_token_blacklisted(jti):
+                    print(f"[socket:connect] Token revoked for {sid}")
+                    return False
+
             # Store identity on session. Participants won't have this, so they connect as guests.
             await sio.save_session(sid, {
                 "user_id": payload.get("sub"),
@@ -48,10 +55,47 @@ async def is_admin(sid) -> bool:
 
 @sio.event
 async def join_session(sid, data):
-    """Event for participants and instructors to join a session room."""
+    """
+    Event for participants and instructors to join a session room.
+    Hardened: verifies participant belongs to the session.
+    """
     session_id = data.get("session_id")
-    if session_id:
+    participant_id = data.get("participant_id")
+    session_code = data.get("session_code")
+
+    if not session_id:
+        return
+
+    # If admin, they can join any room they are managing
+    if await is_admin(sid):
         await sio.enter_room(sid, get_session_room(session_id))
+        return
+
+    # If participant, verify binding
+    if participant_id and session_code:
+        try:
+            from app.database import AsyncSessionLocal
+            from app.models.participant import Participant
+            from app.models.session import Session
+            import uuid
+            
+            async with AsyncSessionLocal() as db:
+                participant = await db.scalar(
+                    select(Participant)
+                    .join(Session, Session.id == Participant.session_id)
+                    .where(
+                        Participant.id == uuid.UUID(participant_id),
+                        Participant.session_id == uuid.UUID(session_id),
+                        Session.join_code == session_code
+                    )
+                )
+                if participant:
+                    await sio.enter_room(sid, get_session_room(session_id))
+                    return
+        except Exception as e:
+            print(f"[socket:join_session] Validation error: {e}")
+    
+    print(f"[socket:join_session] Unauthorized join attempt by {sid} for room {session_id}")
 
 
 @sio.event

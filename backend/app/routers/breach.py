@@ -6,7 +6,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
 from app.limiter import limiter
 from app.models.breach import BreachCheckEvent
+from app.models.participant import Participant
 from app.services.breach_service import check_breach
+from app.routers.deps import get_participant_uuid
 
 router = APIRouter(prefix="/breach", tags=["breach"])
 
@@ -16,8 +18,7 @@ router = APIRouter(prefix="/breach", tags=["breach"])
 async def breach_check(
     email: str, 
     request: Request,
-    session_id: str | None = None,
-    x_participant_uuid: str | None = Header(None, alias="X-Participant-UUID"),
+    participant: Participant = Depends(get_participant_uuid),
     db: AsyncSession = Depends(get_db)
 ):
     # Logic: 1. Check HibP API (done in service)
@@ -25,8 +26,8 @@ async def breach_check(
     
     # Logic: 2. INSERT event into breach_check_events
     event = BreachCheckEvent(
-        participant_id=uuid.UUID(x_participant_uuid) if x_participant_uuid else None,
-        session_id=uuid.UUID(session_id) if session_id else None,
+        participant_id=participant.id,
+        session_id=participant.session_id,
         email_checked=email, 
         breach_count=result["breach_count"], 
         is_breached=result["is_breached"],

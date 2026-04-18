@@ -102,6 +102,19 @@ async def launch_phishing_campaign(
         # Dispatch Celery task
         send_phish_email.delay(participant.email, template.subject, personalized_html)
         
+        # Log 'sent' event
+        event = PhishEvent(
+            campaign_id=campaign.id,
+            participant_id=participant.id,
+            session_id=session_id,
+            event_type="sent",
+            occurred_at=datetime.now(timezone.utc),
+            ip_address=None,
+            user_agent=None
+        )
+        db.add(event)
+
+    await db.commit()
     return { "campaign_id": str(campaign.id), "participants_targeted": len(participants) }
 
 @router.get("/sessions/{session_id}/phishing/stats")
@@ -183,7 +196,7 @@ async def track_click(pid: str, cid: str, request: Request, db: AsyncSession = D
     except Exception:
         pass
     # Redirect to teachable moment or original target if provided
-    return RedirectResponse(f"{settings.FRONTEND_URL}/phishing/catch", status_code=302)
+    return RedirectResponse(f"{settings.frontend_url}/phishing/catch", status_code=302)
 
 @router.post("/track/submit")
 async def track_submit(payload: TrackingSubmit, request: Request, db: AsyncSession = Depends(get_db)):
@@ -191,7 +204,7 @@ async def track_submit(payload: TrackingSubmit, request: Request, db: AsyncSessi
         await log_event(db, str(payload.cid), str(payload.pid), "submitted", request)
     except Exception:
         pass
-    return RedirectResponse(f"{settings.FRONTEND_URL}/phishing/catch", status_code=303)
+    return RedirectResponse(f"{settings.frontend_url}/phishing/catch", status_code=303)
 
 @router.post("/track/report")
 async def track_report(payload: TrackingReport, request: Request, db: AsyncSession = Depends(get_db)):

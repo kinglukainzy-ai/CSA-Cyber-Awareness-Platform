@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, Text
@@ -27,7 +27,7 @@ class FlagSubmission(Base, UUIDPrimaryKeyMixin):
     flag_submitted: Mapped[str] = mapped_column(Text, nullable=False)
     is_correct: Mapped[bool] = mapped_column(Boolean, nullable=False)
     points_awarded: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    submitted_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now())
+    submitted_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
 
 class ParticipantScore(Base, UUIDPrimaryKeyMixin):
@@ -42,4 +42,4 @@ class ParticipantScore(Base, UUIDPrimaryKeyMixin):
         Integer,
         # In a real DB we'd use a generated column, but for simplicity we'll handle in app logic or trigger
     )
-    solved_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now())
+    solved_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))

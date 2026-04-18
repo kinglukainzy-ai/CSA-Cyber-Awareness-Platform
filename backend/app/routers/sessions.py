@@ -171,8 +171,15 @@ async def update_session_status(
 
 @router.post("/{session_id}/challenges", dependencies=[Depends(get_current_admin)])
 async def assign_challenges(session_id: str, payload: SessionAssignChallenges, db: AsyncSession = Depends(get_db)):
+    # Check existing to avoid duplicates
+    s_uuid = uuid.UUID(session_id)
+    existing = await db.scalars(select(SessionChallenge.challenge_id).where(SessionChallenge.session_id == s_uuid))
+    existing_ids = set(existing.all())
+    
     for index, challenge_id in enumerate(payload.challenge_ids, start=1):
-        db.add(SessionChallenge(session_id=session_id, challenge_id=challenge_id, order_num=index))
+        if challenge_id not in existing_ids:
+            db.add(SessionChallenge(session_id=s_uuid, challenge_id=challenge_id, order_num=index))
+    
     await db.commit()
     return {"status": "assigned"}
 
@@ -230,6 +237,16 @@ async def get_session_report(session_id: str, db: AsyncSession = Depends(get_db)
     )
     if not report:
         raise HTTPException(status_code=404, detail="Report not generated yet")
+    
+    # Generate fresh URL if ready
+    if report.status == "ready" and report.storage_path:
+        from app.services.storage_service import get_download_url
+        # We don't want to mutate the DB object's path permanently if it's stored as path
+        # But here we are returning it in the response. SessionReport model has storage_path as Text.
+        # It's better to return a schema that has the URL.
+        # For now, we'll just return the object with the URL in the storage_path field for the response.
+        report.storage_path = get_download_url(report.storage_path)
+        
     return report
 
 
@@ -239,15 +256,21 @@ async def trigger_report_generation(
     db: AsyncSession = Depends(get_db), 
     admin: Admin = Depends(get_current_admin)
 ):
-    # Upsert a 'generating' status so UI knows it's working
+    # Upsert/Guard: If already 'generating', don't trigger again.
     report = await db.scalar(
         select(SessionReport).where(SessionReport.session_id == uuid.UUID(session_id))
     )
+    if report and report.status == "generating":
+        return {"status": "generating", "message": "Report generation already in progress"}
+    
     if not report:
         report = SessionReport(session_id=uuid.UUID(session_id), generated_by=admin.id, status="generating")
         db.add(report)
     else:
         report.status = "generating"
+        report.generated_by = admin.id
+        report.generated_at = datetime.now(timezone.utc)
+    
     await db.commit()
     
     generate_report_task.delay(session_id, str(admin.id))

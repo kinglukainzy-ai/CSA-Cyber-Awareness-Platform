@@ -9,10 +9,18 @@ def get_s3_client():
         aws_access_key_id=settings.minio_access_key,
         aws_secret_access_key=settings.minio_secret_key,
         config=Config(signature_version="s3v4"),
-        region_name="us-east-1",  # Minio usually ignores this
+        region_name="us-east-1",
     )
 
+def ensure_bucket_exists():
+    s3 = get_s3_client()
+    try:
+        s3.head_bucket(Bucket=settings.minio_bucket)
+    except:
+        s3.create_bucket(Bucket=settings.minio_bucket)
+
 def upload_file(file_bytes: bytes, object_name: str, content_type: str = "application/pdf"):
+    ensure_bucket_exists()
     s3 = get_s3_client()
     s3.put_object(
         Bucket=settings.minio_bucket,

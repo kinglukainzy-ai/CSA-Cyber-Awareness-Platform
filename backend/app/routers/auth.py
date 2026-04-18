@@ -55,7 +55,24 @@ async def refresh(response: Response, refresh_token: str | None = Cookie(default
 
 
 @router.post("/logout")
-async def logout(response: Response):
+async def logout(
+    response: Response, 
+    access_token: str | None = Cookie(default=None),
+    refresh_token: str | None = Cookie(default=None)
+):
+    from app.services.redis_service import blacklist_token
+    
+    for token in [access_token, refresh_token]:
+        if token:
+            try:
+                payload = jwt.decode(token, settings.jwt_secret, algorithms=[settings.jwt_algorithm])
+                jti = payload.get("jti")
+                exp = payload.get("exp")
+                if jti and exp:
+                    blacklist_token(jti, exp)
+            except Exception:
+                pass
+
     response.delete_cookie("access_token")
     response.delete_cookie("refresh_token")
     return {"status": "ok"}

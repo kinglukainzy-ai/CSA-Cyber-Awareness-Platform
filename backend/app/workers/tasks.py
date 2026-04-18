@@ -22,9 +22,7 @@ from app.models.challenge import Challenge
 from app.models.phishing import PhishCampaign, PhishEvent, PhishTemplate
 from app.config import settings
 
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-import aiosmtplib
+
 
 
 @celery.task
@@ -37,7 +35,7 @@ async def _send_email_async(to_email: str, subject: str, body_html: str):
     await send_email(to_email, subject, body_html)
 
 
-@celery.task
+@celery.task(time_limit=600, soft_time_limit=540)
 def generate_report_task(session_id: str, admin_id: str) -> dict:
     """Generate PDF report in a fresh event loop."""
     loop = asyncio.new_event_loop()
@@ -157,15 +155,13 @@ async def _generate_report(session_id: str, admin_id: str):
         # ── Upload and Save ──────────────────────────────────────────────────
         file_name = f"reports/{session_id}_{uuid.uuid4().hex[:8]}.pdf"
         upload_file(pdf_bytes, file_name)
-        download_url = get_download_url(file_name, expires_in=86400)
-
         report = await db.scalar(select(SessionReport).where(SessionReport.session_id == session.id))
         if not report:
             report = SessionReport(session_id=session.id)
             db.add(report)
         
         report.status = "ready"
-        report.storage_path = download_url
+        report.storage_path = file_name
         report.summary_snapshot = summary
         report.generated_at = datetime.now(timezone.utc)
         report.generated_by = uuid.UUID(admin_id)
@@ -176,24 +172,10 @@ async def _generate_report(session_id: str, admin_id: str):
 
 @celery.task(bind=True, max_retries=3)
 def send_phish_email(self, to_email: str, subject: str, html_body: str):
-    """Send a single phishing simulation email via SMTP."""
+    """Send a single phishing simulation email via SMTP service."""
     try:
-        # Use aiosmtplib in a sync context via asyncio.run()
+        from app.services.email_service import send_email
         import asyncio
-        
-        msg = MIMEMultipart("alternative")
-        msg["Subject"] = subject
-        msg["From"]    = f"{settings.SMTP_FROM_NAME} <{settings.SMTP_USER}>"
-        msg["To"]      = to_email
-        msg.attach(MIMEText(html_body, "html"))
-        
-        asyncio.run(aiosmtplib.send(
-            msg,
-            hostname=settings.smtp_host,
-            port=settings.smtp_port,
-            username=settings.smtp_user,
-            password=settings.smtp_password,
-            start_tls=True
-        ))
+        asyncio.run(send_email(to_email, subject, html_body))
     except Exception as exc:
         raise self.retry(exc=exc, countdown=60)
