@@ -1,5 +1,4 @@
 version: '3.8'
-
 services:
   postgres:
     image: postgres:15-alpine
@@ -47,12 +46,13 @@ services:
   backend:
     build: ./backend
     working_dir: /app
-    command: sh -c "PYTHONPATH=/app alembic upgrade head && PYTHONPATH=/app uvicorn app.main:socket_app --host 0.0.0.0 --port 8000 --reload"
+    command: sh -c "PYTHONPATH=/app alembic upgrade head && PYTHONPATH=/app python app/db/seeds.py && PYTHONPATH=/app uvicorn app.main:socket_app --host 0.0.0.0 --port 8000 --reload"
     ports:
       - "8000:8000"
     environment:
       - DATABASE_URL=postgresql+asyncpg://csa:devpass@postgres:5432/csa_platform
       - REDIS_URL=redis://redis:6379/0
+      - REDIS_PASSWORD=
       - JWT_SECRET=devsecret
       - JWT_ALGORITHM=HS256
       - JWT_EXPIRE_MINUTES=30
@@ -75,6 +75,8 @@ services:
       - HIBP_API_KEY=dummy_dev_key
       - SEED_ADMIN_EMAIL=admin@csa.dev
       - SEED_ADMIN_PASSWORD=admin1234
+      - BREACH_PEPPER=devpepper
+      - DOMAIN=localhost
     depends_on:
       postgres:
         condition: service_healthy
@@ -90,6 +92,7 @@ services:
     environment:
       - DATABASE_URL=postgresql+asyncpg://csa:devpass@postgres:5432/csa_platform
       - REDIS_URL=redis://redis:6379/0
+      - REDIS_PASSWORD=
       - JWT_SECRET=devsecret
       - SERIAL_SECRET=devserial
       - MINIO_ENDPOINT=minio:9000
@@ -110,6 +113,7 @@ services:
       - TRACKING_BASE_URL=http://localhost:8000
       - SEED_ADMIN_EMAIL=admin@csa.dev
       - SEED_ADMIN_PASSWORD=admin1234
+      - BREACH_PEPPER=devpepper
     depends_on:
       postgres:
         condition: service_healthy
