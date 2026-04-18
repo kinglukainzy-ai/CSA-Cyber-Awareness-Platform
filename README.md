@@ -12,6 +12,7 @@ Before running the platform, ensure you have:
 - **Docker** and **Docker Compose V2** installed.
 - **Port 80/443** open on your server firewall.
 - **OpenSSL** (for secret generation).
+
 - **Domain Name** (Optional, DuckDNS is supported natively).
 
 ---
@@ -73,7 +74,10 @@ This platform implements several production-grade security measures:
 - **Socket.io Authentication**: Mandatory JWT handshake; unauthorized connections are rejected before connecting.
 - **Role-Based Handlers**: Sensitive instructor actions (ending sessions, launching polls) are blocked at the socket level if the user lacks admin claims.
 - **Ephemeral Secrets**: Installers auto-generate unique `JWT_SECRET` and `SERIAL_SECRET` for every deployment.
+
 - **Token Security**: Default JWT access tokens expire after 30 minutes.
+- **JWT Revocation**: Real-time token blacklisting via Redis during logout or administrative session termination.
+- **Participant Isolation**: All participant endpoints require a valid `X-Session-Code` header, binding the client to a specific training instance.
 
 ---
 
@@ -84,6 +88,12 @@ This platform implements several production-grade security measures:
 - **Breach Scout**: HIBP-integrated identity exposure checking (K-anonymity).
 - **Automated Reporting**: Generates 6-section professional impact reports for organizations.
 - **Challenge Library**: Centralized repository for Missions, Scenarios, and Quizzes.
+
+---
+
+## Breaking API Changes (v1.1.1)
+
+All participant-facing endpoints (e.g., `/api/v1/participants/*`) now require the `X-Session-Code` header. Requests without this header will be rejected with a `400 Bad Request`.
 
 ---
 
@@ -101,6 +111,7 @@ All data is persisted via named Docker volumes:
 1. Create a `.env` file from `.env.example`.
 2. Ensure you have Docker and Docker Compose installed.
 3. For local backend development without Docker, use `uvicorn app.main:socket_app --reload`.
+
 4. For frontend development, use `npm run dev` in the `/frontend` directory.
 
 ---
