@@ -67,8 +67,8 @@ export function LiveDashboard({ sessionId }: { sessionId: string }) {
         h > 0
           ? `${h}h ${m}m`
           : m > 0
-          ? `${m}m ${s}s`
-          : `${s}s`
+            ? `${m}m ${s}s`
+            : `${s}s`
       );
     };
     tick();
@@ -80,7 +80,7 @@ export function LiveDashboard({ sessionId }: { sessionId: string }) {
     fetchData();
 
     // Get current admin for metrics/actions
-    api<any>("/auth/me").then(me => setAdminId(me.id)).catch(() => {});
+    api<any>("/auth/me").then(me => setAdminId(me.id)).catch(() => { });
 
     if (socket) {
       socket.on("participant_joined", (payload: { total_participants: number }) => {
@@ -151,9 +151,8 @@ export function LiveDashboard({ sessionId }: { sessionId: string }) {
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2">
             <div
-              className={`h-2 w-2 rounded-full ${
-                status === "live" ? "bg-emerald-500 animate-pulse" : "bg-slate-400"
-              }`}
+              className={`h-2 w-2 rounded-full ${status === "live" ? "bg-emerald-500 animate-pulse" : "bg-slate-400"
+                }`}
             />
             <span className="text-[10px] font-black uppercase tracking-widest opacity-60">
               Status: {status}
@@ -192,7 +191,7 @@ export function LiveDashboard({ sessionId }: { sessionId: string }) {
       </Card>
 
       {/* Metrics Row */}
-      <div className="grid grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
         <Card className="flex items-center gap-4 p-5 border-none shadow-xl shadow-slate-200/50">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-700/10 text-brand-700">
             <Users className="h-5 w-5" />
@@ -233,11 +232,10 @@ export function LiveDashboard({ sessionId }: { sessionId: string }) {
           {challenges.map((challenge, index) => (
             <div
               key={challenge.id}
-              className={`group flex items-center justify-between rounded-2xl border-2 p-4 transition-all ${
-                challenge.unlocked_at
+              className={`group flex items-center justify-between rounded-2xl border-2 p-4 transition-all ${challenge.unlocked_at
                   ? "border-emerald-100 bg-emerald-50/20"
                   : "border-slate-100 bg-white"
-              }`}
+                }`}
             >
               <div className="flex items-center gap-4">
                 <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-xs font-bold text-slate-500">

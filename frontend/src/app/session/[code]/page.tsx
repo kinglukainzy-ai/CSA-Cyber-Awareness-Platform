@@ -15,11 +15,11 @@ import { HintDrawer } from "@/components/participant/HintDrawer";
 import { PollWidget } from "@/components/participant/PollWidget";
 import { BreachWidget } from "@/components/participant/BreachWidget";
 import { SessionEndScreen } from "@/components/participant/SessionEndScreen";
-import { 
-  ShieldCheck, 
-  Users, 
-  Terminal, 
-  LogOut, 
+import {
+  ShieldCheck,
+  Users,
+  Terminal,
+  LogOut,
   AlertCircle,
   Clock,
   ArrowRight
@@ -30,7 +30,7 @@ export default function SessionPage() {
   const params = useParams<{ code: string }>();
   const router = useRouter();
   const participant = useParticipantStore();
-  
+
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [activeChallenge, setActiveChallenge] = useState<Challenge | null>(null);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
@@ -59,12 +59,15 @@ export default function SessionPage() {
       router.push(`/join?code=${params.code}`);
       return;
     }
-    
+
     fetchData();
 
     if (socket) {
       connect();
-      socket.emit("join_session", { session_id: participant.sessionId });
+      socket.emit("join_session", {
+        session_id: participant.sessionId,
+        session_code: participant.sessionCode
+      });
 
       socket.on("session_status", (payload: { status: string }) => {
         setSessionStatus(payload.status);
@@ -115,8 +118,8 @@ export default function SessionPage() {
           <Logo />
           <div className="flex items-center gap-6">
             <div className="hidden items-center gap-2 rounded-full bg-slate-100 px-4 py-1.5 text-sm font-bold text-slate-600 lg:flex">
-                <Users className="h-4 w-4 text-brand-700" />
-                {participant.name}
+              <Users className="h-4 w-4 text-brand-700" />
+              {participant.name}
             </div>
             <Button variant="ghost" size="sm" onClick={handleLogout} className="text-red-600 hover:bg-red-50 hover:text-red-700">
               <LogOut className="h-4 w-4 mr-2" /> Leave
@@ -139,7 +142,7 @@ export default function SessionPage() {
                   <h1 className="text-4xl font-black tracking-tight">{params.code}</h1>
                   <p className="mt-1 text-brand-100 font-medium opacity-80">Organisation: {participant.sessionId ? 'Ghana CSA' : 'Trial'}</p>
                 </div>
-                
+
                 <div className="flex items-center gap-4 rounded-2xl bg-white/10 p-4 backdrop-blur-md">
                   <div className="text-right">
                     <p className="text-[10px] font-black uppercase tracking-widest text-brand-200">Session Status</p>
@@ -158,7 +161,7 @@ export default function SessionPage() {
               <h2 className="text-2xl font-black text-slate-900">Mission Pipeline</h2>
               <div className="grid gap-4 md:grid-cols-2">
                 {challenges.map((challenge) => (
-                  <ChallengeCard 
+                  <ChallengeCard
                     key={challenge.id}
                     title={challenge.title}
                     category={challenge.category}
@@ -192,51 +195,51 @@ export default function SessionPage() {
                         </div>
                         <p>{activeChallenge.content?.scenario || "No intelligence provided for this mission."}</p>
                       </div>
-                      
+
                       <div className="flex flex-col gap-4 border-t border-slate-100 pt-6">
                         <label className="text-sm font-bold text-slate-700">SUBMIT RECOVERED FLAG</label>
-                        <FlagSubmit 
-                          challengeId={activeChallenge.id} 
-                          sessionId={participant.sessionId!} 
-                          participantUuid={participant.participantUuid!} 
+                        <FlagSubmit
+                          challengeId={activeChallenge.id}
+                          sessionId={participant.sessionId!}
+                          participantUuid={participant.participantUuid!}
                         />
                       </div>
                     </div>
                   ) : (
                     <div className="p-10 text-center border-2 border-dashed border-slate-200 rounded-3xl">
-                       <AlertCircle className="h-12 w-12 mx-auto text-slate-300 mb-4" />
-                       <p className="font-bold text-slate-900">Scenario Exercise</p>
-                       <p className="text-sm text-slate-500">Wait for the instructor to launch the interactive portion of this scenario.</p>
+                      <AlertCircle className="h-12 w-12 mx-auto text-slate-300 mb-4" />
+                      <p className="font-bold text-slate-900">Scenario Exercise</p>
+                      <p className="text-sm text-slate-500">Wait for the instructor to launch the interactive portion of this scenario.</p>
                     </div>
                   )}
                 </div>
 
                 <div className="border-t border-slate-100 pt-8">
-                  <HintDrawer 
-                    challengeId={activeChallenge.id} 
-                    sessionId={participant.sessionId!} 
-                    participantUuid={participant.participantUuid!} 
+                  <HintDrawer
+                    challengeId={activeChallenge.id}
+                    sessionId={participant.sessionId!}
+                    participantUuid={participant.participantUuid!}
                   />
                 </div>
               </Card>
             )}
-            
-            <BreachWidget 
-              sessionId={participant.sessionId!} 
-              participantUuid={participant.participantUuid!} 
+
+            <BreachWidget
+              sessionId={participant.sessionId!}
+              participantUuid={participant.participantUuid!}
             />
           </div>
 
           <aside className="flex flex-col gap-8">
             <Leaderboard entries={leaderboard} />
-            
+
             <Card className="flex flex-col gap-4 border-none bg-white p-6 shadow-xl shadow-brand-700/5">
               <div className="flex items-center gap-2">
                 <AlertCircle className="h-4 w-4 text-brand-700" />
                 <h4 className="font-bold text-slate-900">Safety Notice</h4>
               </div>
               <p className="text-sm text-slate-600 leading-relaxed">
-                This is a controlled environment. All phishing drills and challenges are simulations. 
+                This is a controlled environment. All phishing drills and challenges are simulations.
                 Do not enter real work credentials unless explicitly asked in a safe lab environment.
               </p>
             </Card>
@@ -245,15 +248,15 @@ export default function SessionPage() {
       </main>
 
       {/* Live Components */}
-      <PollWidget 
+      <PollWidget
         sessionId={participant.sessionId!}
-        participantUuid={participant.participantUuid!} 
+        participantUuid={participant.participantUuid!}
       />
 
       {sessionStatus === "ended" && (
-        <SessionEndScreen 
-          participantUuid={participant.participantUuid!} 
-          sessionId={participant.sessionId!} 
+        <SessionEndScreen
+          participantUuid={participant.participantUuid!}
+          sessionId={participant.sessionId!}
         />
       )}
     </div>
