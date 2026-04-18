@@ -1,5 +1,6 @@
 import { create } from "zustand";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
 const SESSION_KEY = 'csa_participant';
 
 export interface ParticipantSession {
@@ -72,15 +73,15 @@ export async function resolveParticipant(
   email?: string
 ): Promise<ParticipantSession | null> {
   const raw = typeof window !== 'undefined' ? localStorage.getItem(SESSION_KEY) : null;
-  
+
   if (raw) {
     const stored: ParticipantSession = JSON.parse(raw);
     if (stored.session_code === sessionCode) {
       try {
-        const res = await fetch(`/api/v1/participants/${stored.uuid}/status`, {
+        const res = await fetch(`${API_URL}/participants/${stored.uuid}/status`, {
           headers: { 'X-Participant-UUID': stored.uuid }
         });
-        
+
         if (res.ok) {
           const data = await res.json();
           if (data.session_status === 'ended' || !data.is_valid) {
@@ -90,23 +91,23 @@ export async function resolveParticipant(
           return stored;
         }
       } catch (error) {
-        return stored; 
+        return stored;
       }
     }
     localStorage.removeItem(SESSION_KEY);
   }
-  
+
   if (!name || !email) return null;
-  
+
   try {
-    const res = await fetch('/api/v1/participants/join', {
+    const res = await fetch(`${API_URL}/participants/join`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ session_code: sessionCode, name, email })
     });
-    
+
     if (!res.ok) throw new Error("Join failed");
-    
+
     const participant = await res.json();
     const entry: ParticipantSession = {
       uuid: participant.participant_uuid,
@@ -116,7 +117,7 @@ export async function resolveParticipant(
       email,
       joined_at: Date.now()
     };
-    
+
     localStorage.setItem(SESSION_KEY, JSON.stringify(entry));
     return entry;
   } catch (error) {
