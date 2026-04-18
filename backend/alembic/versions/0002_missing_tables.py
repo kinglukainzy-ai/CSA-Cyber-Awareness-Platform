@@ -109,16 +109,17 @@ def upgrade() -> None:
 
     # ADDITIONAL TABLES
     op.create_table(
-        "phish_templates",
-        sa.Column("id", sa.Uuid(), primary_key=True),
-        sa.Column("title", sa.Text(), nullable=False),
-        sa.Column("subject", sa.Text(), nullable=False),
-        sa.Column("body_html", sa.Text(), nullable=False),
-        sa.Column("sender", sa.Text()),
-        sa.Column("difficulty", sa.Integer()),
-        sa.Column("created_by", sa.Uuid(), sa.ForeignKey("admins.id")),
-        sa.Column("created_at", sa.TIMESTAMP(timezone=True), server_default=sa.func.now()),
-    )
+    "phish_templates",
+    sa.Column("id", sa.Uuid(), primary_key=True),
+    sa.Column("name", sa.Text(), nullable=False),
+    sa.Column("subject", sa.Text(), nullable=False),
+    sa.Column("body_html", sa.Text(), nullable=False),
+    sa.Column("category", sa.Text()),
+    sa.Column("target_url", sa.Text()),
+    sa.Column("difficulty", sa.Integer()),
+    sa.Column("created_by", sa.Uuid(), sa.ForeignKey("admins.id")),
+    sa.Column("created_at", sa.TIMESTAMP(timezone=True), server_default=sa.func.now()),
+)
     op.create_table(
         "phish_campaigns",
         sa.Column("id", sa.Uuid(), primary_key=True),

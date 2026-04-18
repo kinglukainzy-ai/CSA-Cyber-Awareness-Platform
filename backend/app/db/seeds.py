@@ -3,7 +3,8 @@ import asyncio
 from datetime import datetime, timezone
 from sqlalchemy import select, func
 from app.database import AsyncSessionLocal
-from app.models.challenge import Challenge, ChallengeHint
+from app.models.challenge import Challenge
+from app.models.hints import ChallengeHint
 from app.models.phishing import PhishTemplate
 from app.models.organisation import Organisation
 from app.models.admin import Admin

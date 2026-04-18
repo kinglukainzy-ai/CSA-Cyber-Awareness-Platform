@@ -76,6 +76,21 @@ services:
       - FRONTEND_URL=https://${DOMAIN}
       - API_URL=https://api.${DOMAIN}
       - TRACKING_BASE_URL=https://track.${DOMAIN}
+      - JWT_SECRET=${JWT_SECRET:-change_me_in_production}
+      - JWT_ALGORITHM=${JWT_ALGORITHM:-HS256}
+      - JWT_EXPIRE_MINUTES=${JWT_EXPIRE_MINUTES:-480}
+      - SERIAL_SECRET=${SERIAL_SECRET:-another_long_secret}
+      - SMTP_HOST=${SMTP_HOST:-smtp.example.com}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_USER=${SMTP_USER:-noreply@csa.gov.gh}
+      - SMTP_PASSWORD=${SMTP_PASSWORD:-smtp_password}
+      - SMTP_FROM_NAME=${SMTP_FROM_NAME:-CSA Cyber Platform}
+      - HIBP_API_KEY=${HIBP_API_KEY:-placeholder}
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL:-redis://redis:6379/1}
+      - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND:-redis://redis:6379/2}
+      - SEED_ADMIN_EMAIL=${SEED_ADMIN_EMAIL:-admin@csa.gov.gh}
+      - SEED_ADMIN_PASSWORD=${SEED_ADMIN_PASSWORD:-change_me_immediately}
+      - BREACH_PEPPER=${BREACH_PEPPER}
     depends_on:
       postgres:
         condition: service_healthy
