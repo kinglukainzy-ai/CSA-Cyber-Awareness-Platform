@@ -41,7 +41,7 @@ async def list_sessions(status: str | None = None, org: str | None = None, db: A
         query = query.where(Session.status == status)
     if org:
         query = query.where(Session.org_id == org)
-    
+
     result = await db.execute(query.order_by(Session.created_at.desc()))
     sessions = []
     for sess, count in result.all():
@@ -82,7 +82,6 @@ async def get_session(
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
 
-    # Auth: allow either a valid admin token OR a participant who belongs to this session
     if access_token:
         try:
             from jose import jwt
@@ -107,7 +106,9 @@ async def get_session(
     else:
         raise HTTPException(status_code=401, detail="Authentication required")
 
-    participants_count = await db.scalar(select(func.count(Participant.id)).where(Participant.session_id == session.id))
+    participants_count = await db.scalar(
+        select(func.count(Participant.id)).where(Participant.session_id == session.id)
+    )
     challenge_rows = await db.execute(
         select(
             SessionChallenge.challenge_id,
@@ -115,6 +116,7 @@ async def get_session(
             SessionChallenge.unlocked_at,
             Challenge.title,
             Challenge.category,
+            Challenge.type,
             Challenge.points,
         )
         .join(Challenge, Challenge.id == SessionChallenge.challenge_id)
@@ -129,20 +131,21 @@ async def get_session(
                 "id": str(challenge_id),
                 "title": title,
                 "category": category,
+                "type": challenge_type,
                 "points": points,
                 "order_num": order_num,
                 "unlocked_at": unlocked_at,
                 "is_locked": unlocked_at is None,
             }
-            for challenge_id, order_num, unlocked_at, title, category, points in challenge_rows.all()
+            for challenge_id, order_num, unlocked_at, title, category, challenge_type, points in challenge_rows.all()
         ],
     }
 
 
 @router.put("/{session_id}/status", dependencies=[Depends(get_current_admin)])
 async def update_session_status(
-    session_id: uuid.UUID, 
-    payload: SessionStatusUpdate, 
+    session_id: uuid.UUID,
+    payload: SessionStatusUpdate,
     db: AsyncSession = Depends(get_db),
     admin: Admin = Depends(get_current_admin)
 ):
@@ -162,7 +165,6 @@ async def update_session_status(
         session.started_at = datetime.now(timezone.utc)
     if payload.status == "ended":
         session.ended_at = datetime.now(timezone.utc)
-        # Trigger async report generation
         generate_report_task.delay(str(session.id), str(admin.id))
     await db.commit()
     await emit_session_status(session_id, payload.status)
@@ -171,22 +173,26 @@ async def update_session_status(
 
 @router.post("/{session_id}/challenges", dependencies=[Depends(get_current_admin)])
 async def assign_challenges(session_id: str, payload: SessionAssignChallenges, db: AsyncSession = Depends(get_db)):
-    # Check existing to avoid duplicates
     s_uuid = uuid.UUID(session_id)
     existing = await db.scalars(select(SessionChallenge.challenge_id).where(SessionChallenge.session_id == s_uuid))
     existing_ids = set(existing.all())
-    
+
     for index, challenge_id in enumerate(payload.challenge_ids, start=1):
         if challenge_id not in existing_ids:
             db.add(SessionChallenge(session_id=s_uuid, challenge_id=challenge_id, order_num=index))
-    
+
     await db.commit()
     return {"status": "assigned"}
 
 
 @router.delete("/{session_id}/challenges/{challenge_id}", dependencies=[Depends(get_current_admin)])
 async def remove_challenge(session_id: str, challenge_id: str, db: AsyncSession = Depends(get_db)):
-    challenge = await db.scalar(select(SessionChallenge).where(SessionChallenge.session_id == session_id, SessionChallenge.challenge_id == challenge_id))
+    challenge = await db.scalar(
+        select(SessionChallenge).where(
+            SessionChallenge.session_id == session_id,
+            SessionChallenge.challenge_id == challenge_id
+        )
+    )
     if challenge:
         await db.delete(challenge)
         await db.commit()
@@ -214,9 +220,6 @@ async def unlock_challenge(session_id: str, challenge_id: str, db: AsyncSession 
 
 @router.put("/{session_id}/challenges/reorder", dependencies=[Depends(get_current_admin)])
 async def reorder_challenges(session_id: str, payload: List[Dict], db: AsyncSession = Depends(get_db)):
-    """
-    Body: [{"challenge_id": "uuid", "order_num": 1}, ...]
-    """
     for item in payload:
         sc = await db.scalar(
             select(SessionChallenge).where(
@@ -237,28 +240,26 @@ async def get_session_report(session_id: str, db: AsyncSession = Depends(get_db)
     )
     if not report:
         raise HTTPException(status_code=404, detail="Report not generated yet")
-    
-    # Generate a fresh, short-lived presigned URL on demand (1 hour TTL)
+
     if report.status == "ready" and report.storage_path:
         from app.services.storage_service import get_download_url
         report.storage_path = get_download_url(report.storage_path, expires_in=3600)
-        
+
     return report
 
 
 @router.post("/{session_id}/report/generate", dependencies=[Depends(get_current_admin)])
 async def trigger_report_generation(
-    session_id: str, 
-    db: AsyncSession = Depends(get_db), 
+    session_id: str,
+    db: AsyncSession = Depends(get_db),
     admin: Admin = Depends(get_current_admin)
 ):
-    # Upsert/Guard: If already 'generating', don't trigger again.
     report = await db.scalar(
         select(SessionReport).where(SessionReport.session_id == uuid.UUID(session_id))
     )
     if report and report.status == "generating":
         return {"status": "generating", "message": "Report generation already in progress"}
-    
+
     if not report:
         report = SessionReport(session_id=uuid.UUID(session_id), generated_by=admin.id, status="generating")
         db.add(report)
@@ -266,9 +267,8 @@ async def trigger_report_generation(
         report.status = "generating"
         report.generated_by = admin.id
         report.generated_at = datetime.now(timezone.utc)
-    
+
     await db.commit()
-    
     generate_report_task.delay(session_id, str(admin.id))
     return {"status": "generating"}
 
@@ -281,7 +281,6 @@ async def get_participant_score(session_id: str, participant_uuid: str, db: Asyn
     session_uuid = uuid.UUID(session_id)
     part_uuid = uuid.UUID(participant_uuid)
 
-    # Participant total score and solved count
     stats = await db.execute(
         select(
             func.count(ParticipantScore.id),
@@ -295,7 +294,6 @@ async def get_participant_score(session_id: str, participant_uuid: str, db: Asyn
     solved_count = result[0]
     total_score = result[1] or 0
 
-    # Rank calculation
     all_scores_query = await db.execute(
         select(
             ParticipantScore.participant_id,
@@ -305,11 +303,11 @@ async def get_participant_score(session_id: str, participant_uuid: str, db: Asyn
         .order_by(func.sum(func.coalesce(ParticipantScore.final_points, ParticipantScore.base_points - ParticipantScore.hint_deductions)).desc())
     )
     ranked_participants = all_scores_query.all()
-    
+
     total_participants = await db.scalar(
         select(func.count(Participant.id)).where(Participant.session_id == session_uuid)
     ) or 0
-    
+
     rank = 1
     found_in_scores = False
     for pid, score in ranked_participants:
@@ -317,12 +315,10 @@ async def get_participant_score(session_id: str, participant_uuid: str, db: Asyn
             found_in_scores = True
             break
         rank += 1
-    
-    # If participant has 0 score and not in ParticipantScore table, they are last
+
     if not found_in_scores:
         rank = total_participants
 
-    # Total challenges in session
     total_challenges = await db.scalar(
         select(func.count(SessionChallenge.id)).where(SessionChallenge.session_id == session_uuid)
     ) or 0

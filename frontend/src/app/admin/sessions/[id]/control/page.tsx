@@ -26,23 +26,18 @@ export default function SessionDetailPage() {
     if (!sessionId || !socket) {
       return;
     }
-
-    // Connect manually when page mounts
     connect();
     socket.emit("join_session", {
       session_id: sessionId,
-      session_code: null  // admin has no session code — backend handles this
+      session_code: null,
     });
-
     return () => {
-      // Disconnect when page unmounts
       disconnect();
     };
   }, [sessionId, socket, connect, disconnect]);
 
   return (
     <div className="flex flex-col gap-10">
-      {/* Top Banner / Utility */}
       <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2 text-brand-700">
@@ -53,25 +48,34 @@ export default function SessionDetailPage() {
         </div>
 
         <div className="flex items-center gap-3">
-          <Button variant="outline" className="gap-2 border-slate-200">
+          <Button
+            variant="outline"
+            className="gap-2 border-slate-200"
+            onClick={() => {
+              navigator.clipboard.writeText(`${window.location.origin}/join?code=${sessionId}`);
+            }}
+          >
             <Share2 className="h-4 w-4" /> Share Access
           </Button>
-          <Button variant="outline" className="gap-2 border-slate-200">
+          <Button variant="outline" className="gap-2 border-slate-200" disabled>
             <Settings className="h-4 w-4" /> Configuration
           </Button>
-          <Button className="gap-2 px-6">
+          <Button
+            className="gap-2 px-6"
+            onClick={() => {
+              window.open("/join", "_blank");
+            }}
+          >
             <ExternalLink className="h-4 w-4" /> View as Participant
           </Button>
         </div>
       </div>
 
-      {/* Grid Layout */}
       <div className="grid gap-10 lg:grid-cols-[1.2fr,0.8fr]">
         <div className="flex flex-col gap-10">
           <section>
             <LiveDashboard sessionId={sessionId} />
           </section>
-
           <section>
             <PollController sessionId={sessionId} totalParticipants={0} />
           </section>
@@ -81,11 +85,9 @@ export default function SessionDetailPage() {
           <section>
             <ScoreBoard sessionId={sessionId} />
           </section>
-
           <section>
             <PhishTracker sessionId={sessionId} />
           </section>
-
           <Card className="flex items-center gap-4 bg-amber-50 border-amber-100 p-6 text-amber-800">
             <AlertCircle className="h-6 w-6 shrink-0" />
             <div className="flex flex-col gap-1">
