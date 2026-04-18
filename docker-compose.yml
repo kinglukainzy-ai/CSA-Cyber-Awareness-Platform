@@ -85,10 +85,19 @@ services:
         condition: service_healthy
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.backend.rule=Host(`api.${DOMAIN}`)"
-      - "traefik.http.routers.backend.entrypoints=websecure"
-      - "traefik.http.routers.backend.tls=true"
-      - "traefik.http.routers.backend.service=backend"
+      # REST API Router
+      - "traefik.http.routers.backend-api.rule=Host(`api.${DOMAIN}`) && !PathPrefix(`/socket.io/`)"
+      - "traefik.http.routers.backend-api.entrypoints=websecure"
+      - "traefik.http.routers.backend-api.tls=true"
+      - "traefik.http.routers.backend-api.service=backend"
+      
+      # Socket.io Router with throttling
+      - "traefik.http.routers.backend-socket.rule=Host(`api.${DOMAIN}`) && PathPrefix(`/socket.io/`)"
+      - "traefik.http.routers.backend-socket.entrypoints=websecure"
+      - "traefik.http.routers.backend-socket.tls=true"
+      - "traefik.http.routers.backend-socket.service=backend"
+      - "traefik.http.routers.backend-socket.middlewares=socket-throttle@file"
+
       - "traefik.http.routers.tracker.rule=Host(`track.${DOMAIN}`)"
       - "traefik.http.routers.tracker.entrypoints=websecure"
       - "traefik.http.routers.tracker.tls=true"

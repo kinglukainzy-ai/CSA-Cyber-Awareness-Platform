@@ -1,7 +1,10 @@
 import uuid
 from datetime import datetime
-from sqlalchemy import DateTime, func, Uuid
+from sqlalchemy import DateTime, func, Uuid, JSON
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
+
+JSON_COMPAT = JSON().with_variant(JSONB, "postgresql")
 
 class UUIDPrimaryKeyMixin:
     id: Mapped[uuid.UUID] = mapped_column(

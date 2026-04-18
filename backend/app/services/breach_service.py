@@ -1,5 +1,12 @@
 import httpx
+import hashlib
 from app.config import settings
+
+def _hash_email(email: str) -> str:
+    """Lowercases, strips, and hashes email with pepers-SHA256."""
+    clean_email = email.lower().strip()
+    payload = f"{clean_email}{settings.breach_pepper}"
+    return hashlib.sha256(payload.encode()).hexdigest()
 
 async def check_breach(email: str) -> dict:
     async with httpx.AsyncClient(timeout=10.0) as client:

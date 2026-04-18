@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     minio_secret_key: str
     minio_bucket: str
     hibp_api_url: str = "https://haveibeenpwned.com/api/v3/breachedaccount"
-    hibp_api_key: str
+    hibp_api_key: str | None = None
     frontend_url: str
     api_url: str
     tracking_base_url: str
@@ -29,6 +29,7 @@ class Settings(BaseSettings):
     celery_result_backend: str
     seed_admin_email: str
     seed_admin_password: str
+    breach_pepper: str
 
 
 settings = Settings()

@@ -25,3 +25,13 @@ class ChallengeOut(ChallengeCreate):
 class HintUnlockRequest(BaseModel):
     hint_id: int
     session_id: UUID
+
+
+class ChallengeUpdate(BaseModel):
+    title: str | None = None
+    category: str | None = None
+    type: str | None = None
+    difficulty: str | None = None
+    points: int | None = None
+    content: dict | None = None
+    is_active: bool | None = None

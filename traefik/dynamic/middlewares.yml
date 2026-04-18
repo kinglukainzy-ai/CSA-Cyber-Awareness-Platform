@@ -16,3 +16,10 @@ http:
         stsPreload: true
         stsIncludeSubdomains: true
         referrerPolicy: "strict-origin-when-cross-origin"
+
+    socket-throttle:
+      inFlightReq:
+        amount: 10
+        sourceCriterion:
+          ipStrategy:
+            depth: 1

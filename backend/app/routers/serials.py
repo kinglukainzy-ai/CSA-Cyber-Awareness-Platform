@@ -170,7 +170,6 @@ async def submit_flag(
                 session_id=payload.session_id,
                 base_points=challenge.points,
                 hint_deductions=deductions,
-                final_points=challenge.points - deductions,
                 solved_at=datetime.now(timezone.utc),
             )
             db.add(score)

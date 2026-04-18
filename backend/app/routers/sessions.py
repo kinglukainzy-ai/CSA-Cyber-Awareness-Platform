@@ -141,7 +141,7 @@ async def get_session(
 
 @router.put("/{session_id}/status", dependencies=[Depends(get_current_admin)])
 async def update_session_status(
-    session_id: str, 
+    session_id: uuid.UUID, 
     payload: SessionStatusUpdate, 
     db: AsyncSession = Depends(get_db),
     admin: Admin = Depends(get_current_admin)

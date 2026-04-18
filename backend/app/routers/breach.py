@@ -7,7 +7,7 @@ from app.database import get_db
 from app.limiter import limiter
 from app.models.breach import BreachCheckEvent
 from app.models.participant import Participant
-from app.services.breach_service import check_breach
+from app.services.breach_service import check_breach, _hash_email
 from app.routers.deps import get_participant_uuid
 
 router = APIRouter(prefix="/breach", tags=["breach"])
@@ -28,7 +28,7 @@ async def breach_check(
     event = BreachCheckEvent(
         participant_id=participant.id,
         session_id=participant.session_id,
-        email_checked=email, 
+        email_hash=_hash_email(email), 
         breach_count=result["breach_count"], 
         is_breached=result["is_breached"],
         checked_at=datetime.now(timezone.utc)

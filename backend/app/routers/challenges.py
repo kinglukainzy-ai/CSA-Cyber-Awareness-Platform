@@ -1,11 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException
+import uuid
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.models.challenge import Challenge
 from app.routers.deps import get_current_admin
-from app.schemas.challenge import ChallengeCreate, ChallengeOut
+from app.schemas.challenge import ChallengeCreate, ChallengeOut, ChallengeUpdate
 
 router = APIRouter(prefix="/challenges", tags=["challenges"])
 
@@ -33,7 +34,7 @@ async def create_challenge(payload: ChallengeCreate, db: AsyncSession = Depends(
 
 
 @router.get("/{challenge_id}", response_model=ChallengeOut, dependencies=[Depends(get_current_admin)])
-async def get_challenge(challenge_id: str, db: AsyncSession = Depends(get_db)):
+async def get_challenge(challenge_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
     challenge = await db.get(Challenge, challenge_id)
     if not challenge:
         raise HTTPException(status_code=404, detail="Challenge not found")
@@ -41,31 +42,31 @@ async def get_challenge(challenge_id: str, db: AsyncSession = Depends(get_db)):
 
 
 @router.put("/{challenge_id}", response_model=ChallengeOut, dependencies=[Depends(get_current_admin)])
-async def update_challenge(challenge_id: str, payload: ChallengeCreate, db: AsyncSession = Depends(get_db)):
+async def update_challenge(challenge_id: uuid.UUID, payload: ChallengeCreate, db: AsyncSession = Depends(get_db)):
     challenge = await db.get(Challenge, challenge_id)
     if not challenge:
         raise HTTPException(status_code=404, detail="Challenge not found")
     for key, value in payload.model_dump().items():
         setattr(challenge, key, value)
+    await db.commit()
     await db.refresh(challenge)
     return challenge
 
 
 @router.patch("/{challenge_id}", response_model=ChallengeOut, dependencies=[Depends(get_current_admin)])
-async def patch_challenge(challenge_id: str, payload: dict, db: AsyncSession = Depends(get_db)):
+async def patch_challenge(challenge_id: uuid.UUID, payload: ChallengeUpdate, db: AsyncSession = Depends(get_db)):
     challenge = await db.get(Challenge, challenge_id)
     if not challenge:
         raise HTTPException(status_code=404, detail="Challenge not found")
-    for key, value in payload.items():
-        if hasattr(challenge, key):
-            setattr(challenge, key, value)
+    for key, value in payload.model_dump(exclude_none=True).items():
+        setattr(challenge, key, value)
     await db.commit()
     await db.refresh(challenge)
     return challenge
 
 
 @router.delete("/{challenge_id}", dependencies=[Depends(get_current_admin)])
-async def delete_challenge(challenge_id: str, db: AsyncSession = Depends(get_db)):
+async def delete_challenge(challenge_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
     challenge = await db.get(Challenge, challenge_id)
     if challenge:
         challenge.is_active = False

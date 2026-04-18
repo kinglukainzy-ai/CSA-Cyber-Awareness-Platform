@@ -3,11 +3,11 @@ from datetime import datetime
 from typing import Optional
 
 from sqlalchemy import DateTime, ForeignKey, Integer, Text
-from sqlalchemy.dialects.postgresql import JSONB, UUID
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
-from app.models.common import UUIDPrimaryKeyMixin
+from app.models.common import UUIDPrimaryKeyMixin, TimestampMixin, JSON_COMPAT
 
 
 class Poll(Base, UUIDPrimaryKeyMixin):
@@ -15,7 +15,7 @@ class Poll(Base, UUIDPrimaryKeyMixin):
 
     session_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("sessions.id"))
     question: Mapped[str] = mapped_column(Text, nullable=False)
-    options: Mapped[list] = mapped_column(JSONB, nullable=False)
+    options: Mapped[list] = mapped_column(JSON_COMPAT, nullable=False)
     type: Mapped[Optional[str]] = mapped_column(Text)
     order_num: Mapped[int] = mapped_column(Integer, nullable=False)
     unlocked_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
@@ -28,5 +28,5 @@ class PollResponse(Base, UUIDPrimaryKeyMixin):
     poll_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("polls.id"))
     participant_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("participants.id"))
     session_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("sessions.id"))
-    answer: Mapped[dict] = mapped_column(JSONB, nullable=False)
+    answer: Mapped[dict] = mapped_column(JSON_COMPAT, nullable=False)
     responded_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
