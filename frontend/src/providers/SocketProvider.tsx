@@ -3,6 +3,15 @@
 import React, { createContext, useContext, useEffect, useRef } from "react";
 import { io, Socket } from "socket.io-client";
 
+// Module-level helper so both useEffect (init) and connect() (re-auth) can use it
+const getCookie = (name: string): string | null => {
+  if (typeof document === 'undefined') return null;
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop()?.split(';').shift() ?? null;
+  return null;
+};
+
 interface SocketContextType {
   socket: Socket | null;
   connect: () => void;
@@ -25,16 +34,6 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     // Initialize socket only once
     const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:8000";
-    
-    // Helper to get access_token from cookies
-    const getCookie = (name: string) => {
-      if (typeof document === 'undefined') return null;
-      const value = `; ${document.cookie}`;
-      const parts = value.split(`; ${name}=`);
-      if (parts.length === 2) return parts.pop()?.split(';').shift();
-      return null;
-    };
-    
     const token = getCookie("access_token");
 
     socketRef.current = io(socketUrl, {
@@ -53,8 +52,8 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
 
   const connect = () => {
     if (socketRef.current && !socketRef.current.connected) {
-      // In a real app, you might want to refresh the token here
-      // and set socketRef.current.auth = { token: ... }
+      const token = getCookie("access_token");
+      if (token) socketRef.current.auth = { token };
       socketRef.current.connect();
     }
   };

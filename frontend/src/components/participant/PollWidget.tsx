@@ -89,7 +89,10 @@ export function PollWidget({ sessionId, participantUuid }: PollWidgetProps) {
     try {
       await api(`/polls/${activePoll.poll_id}/respond`, {
         method: "POST",
-        headers: { "X-Participant-UUID": participantUuid },
+        headers: { 
+          "X-Participant-UUID": participantUuid,
+          "X-Session-ID": sessionId
+        },
         body: JSON.stringify({ 
           answer: { selected: optionId },
           session_id: sessionId

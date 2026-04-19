@@ -122,7 +122,7 @@ export function LiveDashboard({ sessionId }: { sessionId: string }) {
     try {
       // REST call — persists unlocked_at in DB AND emits socket event server-side
       await api(`/sessions/${sessionId}/challenges/${challengeId}/unlock`, {
-        method: "PUT",
+        method: "POST",
       });
       setChallenges((prev) =>
         prev.map((c) =>

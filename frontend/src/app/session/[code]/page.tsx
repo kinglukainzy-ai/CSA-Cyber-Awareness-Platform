@@ -68,6 +68,7 @@ export default function SessionPage() {
       socket.emit("join_session", {
         session_id: participant.sessionId,
         session_code: participant.sessionCode,
+        participant_id: participant.participantUuid,
       });
 
       socket.on("session_status", (payload: { status: string }) => {

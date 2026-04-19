@@ -70,16 +70,14 @@ async def get_superadmin(admin: Admin = Depends(get_current_admin)) -> Admin:
 
 async def get_participant_uuid(
     x_participant_uuid: str = Header(..., alias="X-Participant-UUID"),
-    x_session_code: str = Header(..., alias="X-Session-Code"),
+    x_session_id: str = Header(..., alias="X-Session-ID"),
     db: AsyncSession = Depends(get_db),
 ) -> Participant:
-    from app.models.session import Session
     participant = await db.scalar(
         select(Participant)
-        .join(Session, Session.id == Participant.session_id)
         .where(
             Participant.id == uuid.UUID(x_participant_uuid),
-            Session.join_code == x_session_code
+            Participant.session_id == uuid.UUID(x_session_id)
         )
     )
     if not participant:

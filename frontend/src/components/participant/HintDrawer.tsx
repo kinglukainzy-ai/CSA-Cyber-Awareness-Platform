@@ -28,7 +28,10 @@ export function HintDrawer({ challengeId, sessionId, participantUuid }: HintDraw
   const fetchHints = async () => {
     try {
       const data = await api<Hint[]>(`/hints/${challengeId}`, {
-        headers: { "X-Participant-UUID": participantUuid }
+        headers: { 
+          "X-Participant-UUID": participantUuid,
+          "X-Session-ID": sessionId
+        }
       });
       setHints(data);
     } catch (err) {
@@ -47,7 +50,10 @@ export function HintDrawer({ challengeId, sessionId, participantUuid }: HintDraw
     try {
       const response = await api<{ riddle_text: string }>(`/hints/unlock`, {
         method: "POST",
-        headers: { "X-Participant-UUID": participantUuid },
+        headers: { 
+          "X-Participant-UUID": participantUuid,
+          "X-Session-ID": sessionId
+        },
         body: JSON.stringify({ hint_id: hintId, session_id: sessionId })
       });
       

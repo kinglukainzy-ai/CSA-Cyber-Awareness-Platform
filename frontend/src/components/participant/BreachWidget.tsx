@@ -24,7 +24,8 @@ export function BreachWidget({ sessionId, participantUuid }: BreachWidgetProps) 
         `/breach/check?email=${encodeURIComponent(email)}&session_id=${sessionId}`,
         {
           headers: {
-            "X-Participant-UUID": participantUuid
+            "X-Participant-UUID": participantUuid,
+            "X-Session-ID": sessionId
           }
         }
       );

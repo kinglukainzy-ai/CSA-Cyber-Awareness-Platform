@@ -48,7 +48,7 @@ async def refresh(response: Response, refresh_token: str | None = Cookie(default
     access = create_token(admin_id, timedelta(minutes=settings.jwt_expire_minutes))
     refresh = create_token(admin_id, timedelta(days=7))
     
-    response.set_cookie("access_token", access, httponly=True, samesite="lax")
+    response.set_cookie("access_token", access, httponly=False, samesite="lax")
     response.set_cookie("refresh_token", refresh, httponly=True, samesite="lax")
     
     return TokenPair(access_token=access, refresh_token=refresh)

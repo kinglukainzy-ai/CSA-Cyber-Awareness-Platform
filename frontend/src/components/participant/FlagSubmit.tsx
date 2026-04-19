@@ -32,7 +32,10 @@ export function FlagSubmit({
     try {
       const response = await api<{ correct: boolean }>("/serials/submit", {
         method: "POST",
-        headers: { "X-Participant-UUID": participantUuid },
+        headers: { 
+          "X-Participant-UUID": participantUuid,
+          "X-Session-ID": sessionId
+        },
         body: JSON.stringify({ 
           challenge_id: challengeId, 
           flag, 

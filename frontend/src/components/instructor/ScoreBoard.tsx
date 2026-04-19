@@ -13,7 +13,7 @@ export function ScoreBoard({ sessionId }: { sessionId: string }) {
 
   const fetchScoreboard = useCallback(async () => {
     try {
-      const data = await api<LeaderboardEntry[]>(`/sessions/${sessionId}/leaderboard`);
+      const data = await api<LeaderboardEntry[]>(`/scores/sessions/${sessionId}/leaderboard`);
       setEntries(data);
     } catch (err) {
       console.error(err);

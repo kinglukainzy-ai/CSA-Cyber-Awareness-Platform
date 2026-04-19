@@ -8,7 +8,7 @@ from socketio import ASGIApp
 
 from app.config import settings
 from app.limiter import limiter
-from app.routers import admins, auth, breach, challenges, hints, organisations, participants, phishing, polls, reports, scores, serials, sessions
+from app.routers import admins, auth, breach, challenges, hints, organisations, participants, phishing, polls, scores, serials, sessions
 from app.sockets.events import sio
 
 @asynccontextmanager
@@ -42,7 +42,6 @@ for router in [
     phishing.router,
     polls.router,
     breach.router,
-    reports.router,
 ]:
     app.include_router(router, prefix=api_prefix)
 
