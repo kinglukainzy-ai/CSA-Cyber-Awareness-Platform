@@ -97,7 +97,7 @@ export default function SessionDashboard() {
     fetchData();
 
     if (socket) {
-      socket.emit("join_session", { session_id: id, role: "instructor" });
+      socket.emit("join_session", { session_id: id });
 
       socket.on("participant_joined", (payload) => {
         fetchData(); // Simplest way to refresh lists
