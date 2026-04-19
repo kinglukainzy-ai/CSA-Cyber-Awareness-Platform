@@ -17,6 +17,7 @@ import {
   Copy,
   X,
   Filter,
+  CheckCircle2,
 } from "lucide-react";
 import { Session, Organisation } from "@/types";
 
@@ -41,6 +42,7 @@ export default function SessionsPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [orgFilter, setOrgFilter] = useState("all");
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
   const [formData, setFormData] = useState({ name: "", org_id: "", scheduled_at: "" });
 
   const fetchData = async () => {
@@ -90,7 +92,8 @@ export default function SessionsPage() {
 
   const copyJoinCode = (code: string) => {
     navigator.clipboard.writeText(code);
-    // Would show a toast here
+    setCopiedId(code);
+    setTimeout(() => setCopiedId(null), 2000);
   };
 
   return (
@@ -137,87 +140,99 @@ export default function SessionsPage() {
       </div>
 
       <Card className="overflow-hidden border-none p-0 shadow-xl shadow-slate-200/50">
-        <table className="w-full text-left border-collapse">
-          <thead>
-            <tr className="border-b border-slate-100 bg-slate-50/50">
-              <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">SESSION</th>
-              <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">ORGANISATION</th>
-              <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">JOIN CODE</th>
-              <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">STATUS</th>
-              <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">DATE</th>
-              <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">PARTICIPANTS</th>
-              <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">ACTIONS</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100 bg-white text-sm">
-            {filteredSessions.map((session) => (
-              <tr key={session.id} className="group hover:bg-slate-50/50 transition-colors">
-                <td className="px-6 py-5 font-bold text-slate-900">{session.name}</td>
-                <td className="px-6 py-5 text-slate-600 font-medium">
-                  {orgs.find(o => o.id === session.org_id)?.name || "Unassigned"}
-                </td>
-                <td className="px-6 py-5">
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono font-black text-brand-700 bg-brand-700/5 px-2 py-1 rounded-lg text-xs">
-                      {session.join_code}
-                    </span>
-                    <button 
-                      title="Copy Join Code"
-                      onClick={() => copyJoinCode(session.join_code)} 
-                      className="text-slate-300 hover:text-brand-700"
-                    >
-                      <Copy className="h-3 w-3" />
-                    </button>
-                  </div>
-                </td>
-                <td className="px-6 py-5">
-                  <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-tight ${STATUS_STYLES[session.status]}`}>
-                    <span className={`h-1.5 w-1.5 rounded-full ${STATUS_DOT[session.status]}`} />
-                    {session.status}
-                  </span>
-                </td>
-                <td className="px-6 py-5 text-slate-500 font-medium">
-                  {session.scheduled_at ? new Date(session.scheduled_at).toLocaleDateString() : "N/A"}
-                </td>
-                <td className="px-6 py-5">
-                  <div className="flex items-center gap-2 font-bold text-slate-900">
-                    <Users className="h-3.5 w-3.5 text-slate-400" />
-                    {session.participants_count || 0}
-                  </div>
-                </td>
-                <td className="px-6 py-5">
-                  <div className="flex items-center gap-2">
-                    {session.status === "ended" ? (
-                      <Link href={`/admin/sessions/${session.id}/report`}>
-                        <Button variant="ghost" size="sm" className="h-9 gap-2 text-slate-500">
-                          <FileText className="h-4 w-4" /> Report
-                        </Button>
-                      </Link>
-                    ) : (
-                      <Link href={`/admin/sessions/${session.id}/control`}>
-                        <Button size="sm" className="h-9 gap-2">
-                          <Monitor className="h-4 w-4" /> Open
-                        </Button>
-                      </Link>
-                    )}
-                    <Link href={`/admin/sessions/${session.id}`}>
-                      <Button variant="ghost" size="sm" className="h-9 w-9 p-0">
-                        <ChevronRight className="h-4 w-4" />
-                      </Button>
-                    </Link>
-                  </div>
-                </td>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b border-slate-100 bg-slate-50/50">
+                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">SESSION</th>
+                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">ORGANISATION</th>
+                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">JOIN CODE</th>
+                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">STATUS</th>
+                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">DATE</th>
+                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">PARTICIPANTS</th>
+                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">ACTIONS</th>
               </tr>
-            ))}
-            {loading && (
-                <tr>
-                    <td colSpan={7} className="py-20 text-center text-slate-300">
-                        <Loader2 className="h-8 w-8 mx-auto animate-spin" />
-                    </td>
+            </thead>
+            <tbody className="divide-y divide-slate-100 bg-white text-sm">
+              {filteredSessions.map((session) => (
+                <tr key={session.id} className="group hover:bg-slate-50/50 transition-colors">
+                  <td className="px-6 py-5 font-bold text-slate-900">{session.name}</td>
+                  <td className="px-6 py-5 text-slate-600 font-medium">
+                    {orgs.find(o => o.id === session.org_id)?.name || "Unassigned"}
+                  </td>
+                  <td className="px-6 py-5">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono font-black text-brand-700 bg-brand-700/5 px-2 py-1 rounded-lg text-xs">
+                        {session.join_code}
+                      </span>
+                      <button 
+                        title="Copy Join Code"
+                        onClick={() => copyJoinCode(session.join_code)} 
+                        className={`transition-colors ${copiedId === session.join_code ? "text-emerald-500" : "text-slate-300 hover:text-brand-700"}`}
+                      >
+                        {copiedId === session.join_code ? <CheckCircle2 className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                      </button>
+                    </div>
+                  </td>
+                  <td className="px-6 py-5">
+                    <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-tight ${STATUS_STYLES[session.status]}`}>
+                      <span className={`h-1.5 w-1.5 rounded-full ${STATUS_DOT[session.status]}`} />
+                      {session.status}
+                    </span>
+                  </td>
+                  <td className="px-6 py-5 text-slate-500 font-medium">
+                    {session.scheduled_at ? new Date(session.scheduled_at).toLocaleDateString() : "N/A"}
+                  </td>
+                  <td className="px-6 py-5">
+                    <div className="flex items-center gap-2 font-bold text-slate-900">
+                      <Users className="h-3.5 w-3.5 text-slate-400" />
+                      {session.participants_count || 0}
+                    </div>
+                  </td>
+                  <td className="px-6 py-5">
+                    <div className="flex items-center gap-2">
+                      {session.status === "ended" ? (
+                        <Link href={`/admin/sessions/${session.id}/report`}>
+                          <Button variant="ghost" size="sm" className="h-9 gap-2 text-slate-500">
+                            <FileText className="h-4 w-4" /> Report
+                          </Button>
+                        </Link>
+                      ) : (
+                        <Link href={`/admin/sessions/${session.id}/control`}>
+                          <Button size="sm" className="h-9 gap-2">
+                            <Monitor className="h-4 w-4" /> Open
+                          </Button>
+                        </Link>
+                      )}
+                      <Link href={`/admin/sessions/${session.id}`}>
+                        <Button variant="ghost" size="sm" className="h-9 w-9 p-0">
+                          <ChevronRight className="h-4 w-4" />
+                        </Button>
+                      </Link>
+                    </div>
+                  </td>
                 </tr>
-            )}
-          </tbody>
-        </table>
+              ))}
+              {loading && (
+                  <tr>
+                      <td colSpan={7} className="py-20 text-center text-slate-300">
+                          <Loader2 className="h-8 w-8 mx-auto animate-spin" />
+                      </td>
+                  </tr>
+              )}
+              {filteredSessions.length === 0 && !loading && (
+                  <tr>
+                      <td colSpan={7} className="py-20">
+                          <div className="mx-auto max-w-sm flex flex-col items-center justify-center p-8 border-2 border-dashed border-slate-200 rounded-3xl opacity-40">
+                              <Calendar className="h-10 w-10 mb-2" />
+                              <p className="font-bold">No engagements found</p>
+                          </div>
+                      </td>
+                  </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </Card>
 
       {/* New Session Drawer */}
@@ -279,7 +294,7 @@ export default function SessionsPage() {
               <div className="p-4 rounded-xl bg-brand-700/5 border border-brand-700/10 mt-4">
                  <p className="text-[10px] font-bold text-brand-700 uppercase tracking-widest mb-1">Auto-Generation</p>
                  <p className="text-[10px] text-brand-700/70 font-medium leading-relaxed">
-                   A unique **CSA-XXXX** join code will be generated upon creation. This code remains active until the session is ended.
+                   A unique <strong className="font-bold text-brand-800">CSA-XXXX</strong> join code will be generated upon creation. This code remains active until the session is ended.
                  </p>
               </div>
             </form>

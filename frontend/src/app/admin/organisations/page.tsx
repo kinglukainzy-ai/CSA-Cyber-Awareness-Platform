@@ -15,8 +15,10 @@ import {
   Edit2
 } from "lucide-react";
 import { Organisation } from "@/types";
+import { useRouter } from "next/navigation";
 
 export default function OrganisationsPage() {
+  const router = useRouter();
   const [orgs, setOrgs] = useState<Organisation[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -124,7 +126,7 @@ export default function OrganisationsPage() {
                 <tr key={org.id} className="group hover:bg-slate-50/50 transition-colors">
                   <td className="px-6 py-5">
                     <button 
-                      onClick={() => window.location.href = `/admin/sessions?org=${org.id}`}
+                      onClick={() => router.push(`/admin/sessions?org=${org.id}`)}
                       className="text-left hover:text-brand-700 transition-colors"
                     >
                       <div className="flex items-center gap-3">
@@ -165,6 +167,16 @@ export default function OrganisationsPage() {
                   <tr>
                       <td colSpan={6} className="py-20 text-center text-slate-300">
                           <Loader2 className="h-8 w-8 mx-auto animate-spin" />
+                      </td>
+                  </tr>
+              )}
+              {filteredOrgs.length === 0 && !loading && (
+                  <tr>
+                      <td colSpan={6} className="py-20">
+                          <div className="mx-auto max-w-sm flex flex-col items-center justify-center p-8 border-2 border-dashed border-slate-200 rounded-3xl opacity-40">
+                              <Building2 className="h-10 w-10 mb-2" />
+                              <p className="font-bold">No organisations found</p>
+                          </div>
                       </td>
                   </tr>
               )}

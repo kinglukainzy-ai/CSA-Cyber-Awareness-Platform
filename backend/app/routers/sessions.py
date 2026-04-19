@@ -109,6 +109,31 @@ async def get_session(
     participants_count = await db.scalar(
         select(func.count(Participant.id)).where(Participant.session_id == session.id)
     )
+
+    from app.models.scoring import ParticipantScore
+    participants_query = await db.execute(
+        select(
+            Participant.id,
+            Participant.name,
+            Participant.joined_at,
+            func.sum(func.coalesce(ParticipantScore.final_points, ParticipantScore.base_points - ParticipantScore.hint_deductions)).label("score")
+        )
+        .outerjoin(ParticipantScore, ParticipantScore.participant_id == Participant.id)
+        .where(Participant.session_id == session.id)
+        .group_by(Participant.id)
+        .order_by(Participant.joined_at.desc())
+    )
+    
+    participants_list = [
+        {
+            "id": str(pid),
+            "name": name,
+            "joined_at": joined_at.isoformat() if joined_at else None,
+            "score": int(score or 0)
+        }
+        for pid, name, joined_at, score in participants_query.all()
+    ]
+
     challenge_rows = await db.execute(
         select(
             SessionChallenge.challenge_id,
@@ -126,6 +151,7 @@ async def get_session(
     return {
         "session": SessionOut.model_validate(session),
         "participants_count": participants_count or 0,
+        "participants_list": participants_list,
         "challenges": [
             {
                 "id": str(challenge_id),

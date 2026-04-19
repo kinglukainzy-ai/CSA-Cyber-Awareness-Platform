@@ -176,55 +176,57 @@ export default function AdminDashboard() {
           </div>
 
           <Card className="overflow-hidden border-none p-0 shadow-xl shadow-slate-200/50">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-slate-100 bg-slate-50/50">
-                  <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">SESSION</th>
-                  <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">CODE</th>
-                  <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">STATUS</th>
-                  <th className="px-6 py-4" />
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 bg-white text-sm">
-                {recentSessions.length === 0 && (
-                  <tr>
-                    <td colSpan={4} className="py-16 text-center opacity-30 font-bold">
-                      No sessions yet. Create your first engagement.
-                    </td>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-slate-100 bg-slate-50/50">
+                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">SESSION</th>
+                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">CODE</th>
+                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">STATUS</th>
+                    <th className="px-6 py-4" />
                   </tr>
-                )}
-                {recentSessions.map((session) => (
-                  <tr key={session.id} className="group hover:bg-slate-50/50 transition-colors">
-                    <td className="px-6 py-4 font-bold text-slate-900">{session.name}</td>
-                    <td className="px-6 py-4">
-                      <span className="rounded-lg bg-slate-100 px-2.5 py-1 font-mono text-xs font-black text-slate-700">
-                        {session.join_code}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span
-                        className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-tight ${
-                          session.status === "live"   ? "bg-emerald-100 text-emerald-700" :
-                          session.status === "ready"  ? "bg-blue-100 text-blue-700" :
-                          session.status === "ended"  ? "bg-amber-100 text-amber-700" :
-                                                        "bg-slate-100 text-slate-600"
-                        }`}
-                      >
-                        <span className={`h-1.5 w-1.5 rounded-full ${session.status === "live" ? "bg-emerald-500 animate-pulse" : "bg-current opacity-40"}`} />
-                        {session.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <Link href={`/admin/sessions/${session.id}`}>
-                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100">
-                          <ArrowRight className="h-4 w-4" />
-                        </Button>
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-slate-100 bg-white text-sm">
+                  {recentSessions.length === 0 && (
+                    <tr>
+                      <td colSpan={4} className="py-16 text-center opacity-30 font-bold">
+                        No sessions yet. Create your first engagement.
+                      </td>
+                    </tr>
+                  )}
+                  {recentSessions.map((session) => (
+                    <tr key={session.id} className="group hover:bg-slate-50/50 transition-colors">
+                      <td className="px-6 py-4 font-bold text-slate-900">{session.name}</td>
+                      <td className="px-6 py-4">
+                        <span className="rounded-lg bg-slate-100 px-2.5 py-1 font-mono text-xs font-black text-slate-700">
+                          {session.join_code}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span
+                          className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-tight ${
+                            session.status === "live"   ? "bg-emerald-100 text-emerald-700" :
+                            session.status === "ready"  ? "bg-blue-100 text-blue-700" :
+                            session.status === "ended"  ? "bg-amber-100 text-amber-700" :
+                                                          "bg-slate-100 text-slate-600"
+                          }`}
+                        >
+                          <span className={`h-1.5 w-1.5 rounded-full ${session.status === "live" ? "bg-emerald-500 animate-pulse" : "bg-current opacity-40"}`} />
+                          {session.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <Link href={`/admin/sessions/${session.id}`}>
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100">
+                            <ArrowRight className="h-4 w-4" />
+                          </Button>
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </Card>
         </div>
 

@@ -100,51 +100,53 @@ export default function AdminsPage() {
       </div>
 
       <Card className="overflow-hidden border-none p-0 shadow-xl shadow-slate-200/50">
-        <table className="w-full text-left border-collapse">
-          <thead>
-            <tr className="border-b border-slate-100 bg-slate-50/50">
-              <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">FULL NAME</th>
-              <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">EMAIL</th>
-              <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">ROLE</th>
-              <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">CREATED</th>
-              <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">LAST LOGIN</th>
-              <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">ACTIONS</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100 bg-white text-sm">
-            {admins.map((admin) => (
-              <tr key={admin.id} className="group hover:bg-slate-50/50 transition-colors">
-                <td className="px-6 py-5 font-bold text-slate-900">{admin.full_name}</td>
-                <td className="px-6 py-5 text-slate-600">{admin.email}</td>
-                <td className="px-6 py-5">
-                  <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-tight ${
-                    admin.role === "superadmin" ? "bg-red-100 text-red-700" : "bg-blue-100 text-blue-700"
-                  }`}>
-                    {admin.role === "superadmin" ? <ShieldAlert className="h-3 w-3" /> : <ShieldCheck className="h-3 w-3" />}
-                    {admin.role}
-                  </span>
-                </td>
-                <td className="px-6 py-5 text-slate-500">
-                  {new Date(admin.created_at).toLocaleDateString()}
-                </td>
-                <td className="px-6 py-5 text-slate-500">
-                  {admin.last_login ? new Date(admin.last_login).toLocaleString() : "Never"}
-                </td>
-                <td className="px-6 py-5">
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="h-9 w-9 p-0 text-slate-400 hover:text-red-600"
-                    disabled={admin.id === currentAdmin?.id}
-                    onClick={() => handleDeactivate(admin.id, admin.full_name)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </td>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b border-slate-100 bg-slate-50/50">
+                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">FULL NAME</th>
+                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">EMAIL</th>
+                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">ROLE</th>
+                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">CREATED</th>
+                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">LAST LOGIN</th>
+                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">ACTIONS</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-slate-100 bg-white text-sm">
+              {admins.map((admin) => (
+                <tr key={admin.id} className="group hover:bg-slate-50/50 transition-colors">
+                  <td className="px-6 py-5 font-bold text-slate-900">{admin.full_name}</td>
+                  <td className="px-6 py-5 text-slate-600">{admin.email}</td>
+                  <td className="px-6 py-5">
+                    <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-tight ${
+                      admin.role === "superadmin" ? "bg-red-100 text-red-700" : "bg-blue-100 text-blue-700"
+                    }`}>
+                      {admin.role === "superadmin" ? <ShieldAlert className="h-3 w-3" /> : <ShieldCheck className="h-3 w-3" />}
+                      {admin.role}
+                    </span>
+                  </td>
+                  <td className="px-6 py-5 text-slate-500">
+                    {new Date(admin.created_at).toLocaleDateString()}
+                  </td>
+                  <td className="px-6 py-5 text-slate-500">
+                    {admin.last_login ? new Date(admin.last_login).toLocaleString() : "Never"}
+                  </td>
+                  <td className="px-6 py-5">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-9 w-9 p-0 text-slate-400 hover:text-red-600"
+                      disabled={admin.id === currentAdmin?.id}
+                      onClick={() => handleDeactivate(admin.id, admin.full_name)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </Card>
 
       {/* Drawer */}

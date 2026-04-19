@@ -79,13 +79,17 @@ export default function SessionDashboard() {
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const [timeElapsed, setTimeElapsed] = useState("0s");
+  const [confirmStatus, setConfirmStatus] = useState<string | null>(null);
+  const [phishingTemplates, setPhishingTemplates] = useState<any[]>([]);
 
   const fetchData = useCallback(async () => {
     try {
       const data = await api<any>(`/sessions/${id}`);
+      const tData = await api<any[]>("/phishing/templates");
       setSession(data.session);
       setChallenges(data.challenges || []);
-      setParticipants(data.participants_list || []); // Assuming we add participants_list to backend response
+      setParticipants(data.participants_list || []);
+      setPhishingTemplates(tData);
       setLoading(false);
     } catch (err) {
       console.error("Failed to fetch session data:", err);
@@ -165,6 +169,15 @@ export default function SessionDashboard() {
     }
   };
 
+  const handleRemoveChallenge = async (challengeId: string) => {
+    try {
+      await api(`/sessions/${id}/challenges/${challengeId}`, { method: "DELETE" });
+      setChallenges(prev => prev.filter(c => c.id !== challengeId));
+    } catch (err) {
+      console.error("Failed to remove challenge:", err);
+    }
+  };
+
   if (loading) return (
     <div className="flex h-screen items-center justify-center bg-slate-50">
       <div className="flex flex-col items-center gap-4">
@@ -208,7 +221,7 @@ export default function SessionDashboard() {
         <div className="flex items-center gap-4">
           <Button 
             variant="outline" 
-            className="border-white/10 text-white hover:bg-white/10 h-10 gap-2"
+            className="border-white/10 text-white hover:bg-white/10 h-11 gap-2"
             onClick={() => {
               navigator.clipboard.writeText(session.join_code);
               setCopied(true);
@@ -220,21 +233,35 @@ export default function SessionDashboard() {
           </Button>
           {session.status !== "ended" && (
             <Button 
-              className={`h-10 px-6 font-black ${isLive ? 'bg-red-600 hover:bg-red-700' : 'bg-brand-600 hover:bg-brand-700'}`}
-              onClick={() => {
-                const nextStatus = isLive ? "ended" : session.status === "draft" ? "ready" : "live";
-                if (confirm(`Are you sure you want to set status to ${nextStatus}?`)) {
-                  handleStatusChange(nextStatus);
+              className={`h-11 px-6 font-black transition-colors ${isLive ? 'bg-red-600 hover:bg-red-700' : 'bg-brand-600 hover:bg-brand-700'} ${(confirmStatus === 'header-live' || confirmStatus === 'header-ended') ? '!bg-red-600 hover:!bg-red-700' : ''}`}
+              onClick={async () => {
+                const targetAction = isLive ? "ended" : "live";
+                const confirmKey = `header-${targetAction}`;
+                
+                if (confirmStatus === confirmKey) {
+                  setConfirmStatus(null);
+                  if (targetAction === "live" && session.status === "draft") {
+                    await handleStatusChange("ready");
+                  }
+                  await handleStatusChange(targetAction);
+                } else {
+                  setConfirmStatus(confirmKey);
+                  setTimeout(() => setConfirmStatus(null), 3000);
                 }
               }}
             >
-              {isLive ? <Square className="mr-2 h-4 w-4" /> : <Play className="mr-2 h-4 w-4" />}
-              {isLive ? "END SESSION" : session.status === "draft" ? "SET READY" : "GO LIVE"}
+              {confirmStatus?.startsWith('header-') ? (
+                <>Click again to confirm</>
+              ) : isLive ? (
+                <><Square className="mr-2 h-4 w-4" /> END SESSION</>
+              ) : (
+                <><Play className="mr-2 h-4 w-4" /> GO LIVE</>
+              )}
             </Button>
           )}
           {session.status === "ended" && (
             <Link href={`/admin/sessions/${id}/report`}>
-              <Button className="bg-brand-600 hover:bg-brand-700 h-10 gap-2">
+              <Button className="bg-brand-600 hover:bg-brand-700 h-11 gap-2">
                 <FileText className="h-4 w-4" /> Final Report
               </Button>
             </Link>
@@ -252,7 +279,7 @@ export default function SessionDashboard() {
                 <h2 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-3">
                   <Activity className="h-6 w-6 text-brand-700" /> Mission Pipeline
                 </h2>
-                <Button className="gap-2 bg-slate-900 hover:bg-slate-800">
+                <Button className="gap-2 bg-slate-900 hover:bg-slate-800" onClick={() => router.push(`/admin/challenges?session=${id}`)}>
                   <Plus className="h-4 w-4" /> Add Mission
                 </Button>
               </div>
@@ -274,7 +301,7 @@ export default function SessionDashboard() {
                     </div>
                     <div className="flex items-center gap-4">
                       <span className="font-black text-brand-700 text-sm">{ch.points} PTS</span>
-                      <Button variant="ghost" size="sm" className="text-slate-300 hover:text-red-600">
+                      <Button variant="ghost" size="sm" className="text-slate-300 hover:text-red-600" onClick={() => handleRemoveChallenge(ch.id)}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
@@ -310,20 +337,36 @@ export default function SessionDashboard() {
                     <p className="text-xs text-slate-500 font-medium leading-relaxed">Select the template to deploy as soon as the session goes live (Pre-session campaign).</p>
                     <select 
                       title="Select Phishing Template"
-                      className="mt-3 w-full h-10 px-3 rounded-xl border border-slate-200 bg-white font-bold text-sm outline-none focus:border-brand-600"
+                      className="mt-3 w-full h-11 px-3 rounded-xl border border-slate-200 bg-white font-bold text-sm outline-none focus:border-brand-600"
                     >
-                      <option>-- Select Template --</option>
-                      <option>Microsoft 365 Security Alert</option>
-                      <option>HR Policy Update</option>
+                      <option value="">-- Select Template --</option>
+                      {phishingTemplates.map(t => (
+                        <option key={t.id} value={t.id}>{t.name || t.type}</option>
+                      ))}
                     </select>
                   </div>
                 </div>
 
                 <Button 
-                  className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 font-black text-lg"
-                  onClick={() => handleStatusChange("live")}
+                  className={`w-full h-12 font-black text-lg transition-colors ${confirmStatus === 'setup-live' ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-emerald-600 hover:bg-emerald-700 text-white'}`}
+                  onClick={async () => {
+                    if (confirmStatus === 'setup-live') {
+                      setConfirmStatus(null);
+                      if (session.status === "draft") {
+                        await handleStatusChange("ready");
+                      }
+                      await handleStatusChange("live");
+                    } else {
+                      setConfirmStatus('setup-live');
+                      setTimeout(() => setConfirmStatus(null), 3000);
+                    }
+                  }}
                 >
-                  <Play className="mr-2 h-5 w-5 fill-current" /> DEPLOY AS LIVE
+                  {confirmStatus === 'setup-live' ? (
+                    <>Click again to confirm deployment</>
+                  ) : (
+                    <><Play className="mr-2 h-5 w-5 fill-current" /> DEPLOY AS LIVE</>
+                  )}
                 </Button>
               </Card>
             </div>
@@ -386,7 +429,7 @@ export default function SessionDashboard() {
 
             {/* Centre: Live Activity */}
             <div className="bg-slate-50 flex flex-col overflow-hidden p-6 gap-6">
-              <div className="grid grid-cols-2 gap-6 h-[400px]">
+              <div className="grid grid-cols-2 gap-6 min-h-[200px]">
                 <PhishTracker sessionId={id} />
                 <PollController sessionId={id} totalParticipants={participants.length} />
               </div>
